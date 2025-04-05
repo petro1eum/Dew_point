@@ -259,7 +259,7 @@
                     <p class="text-sm mt-2 max-w-lg lang-en">Scientifically accurate tool for calculating acid dew point temperatures of H₂SO₄, HCl, and H₂S in gas streams</p>
                 </div>
                 <div class="flex items-center mt-4 sm:mt-0">
-                    <button id="langToggle" class="btn-primary flex items-center">
+                    <button id="langToggle" class="btn-primary flex items-center" onclick="toggleLanguage()">
                         <i class="fas fa-globe mr-2"></i>
                         <span class="lang-ru">EN</span>
                         <span class="lang-en">RU</span>
@@ -276,6 +276,11 @@
                     <i class="fas fa-calculator mr-2"></i>
                     <span class="lang-ru">Калькулятор</span>
                     <span class="lang-en">Calculator</span>
+                </button>
+                <button class="tab-btn px-4 py-2 mr-2" data-tab="reference-data">
+                    <i class="fas fa-table mr-2"></i>
+                    <span class="lang-ru">Справочные данные</span>
+                    <span class="lang-en">Reference Data</span>
                 </button>
                 <button class="tab-btn px-4 py-2 mr-2" data-tab="theory">
                     <i class="fas fa-book mr-2"></i>
@@ -582,6 +587,50 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Reference Data Comparison -->
+                                <div id="reference-data-comparison" class="mt-6 p-4 rounded-lg bg-blue-50 fade-in">
+                                    <h3 class="font-bold text-lg mb-2">
+                                        <i class="fas fa-table mr-2 text-blue-600"></i>
+                                        <span class="lang-ru">Сравнение с табличными данными</span>
+                                        <span class="lang-en">Reference Data Comparison</span>
+                                    </h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                                        <div class="bg-white p-3 rounded-md shadow-sm">
+                                            <div class="font-medium text-blue-800 mb-1">
+                                                <span class="lang-ru">Ближайшее табличное значение:</span>
+                                                <span class="lang-en">Closest reference value:</span>
+                                            </div>
+                                            <div class="flex items-baseline">
+                                                <span id="reference-value" class="text-2xl font-bold text-blue-900">129</span>
+                                                <span class="text-lg ml-1 text-blue-700">°C</span>
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-2" id="reference-conditions">
+                                                <span class="lang-ru">При SO₃: 10 ppm, H₂O: 10%</span>
+                                                <span class="lang-en">At SO₃: 10 ppm, H₂O: 10%</span>
+                                            </div>
+                                        </div>
+                                        <div class="bg-white p-3 rounded-md shadow-sm">
+                                            <div class="font-medium text-blue-800 mb-1">
+                                                <span class="lang-ru">Отклонение от расчетного:</span>
+                                                <span class="lang-en">Deviation from calculated:</span>
+                                            </div>
+                                            <div class="flex items-baseline">
+                                                <span id="reference-deviation" class="text-2xl font-bold text-blue-900">-1.5</span>
+                                                <span class="text-lg ml-1 text-blue-700">°C</span>
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-2">
+                                                <span id="deviation-percentage" class="font-medium">(-1.2%)</span>
+                                                <span class="lang-ru"> отличие от расчетного значения</span>
+                                                <span class="lang-en"> difference from calculated value</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm mt-3">
+                                        <span class="lang-ru">Справочные данные предоставляют реальные измерения и могут отличаться от теоретических расчетов. Для критически важных расчетов рекомендуется использовать более консервативную оценку.</span>
+                                        <span class="lang-en">Reference data provides real-world measurements and may differ from theoretical calculations. For critical applications, it's recommended to use the more conservative estimate.</span>
+                                    </div>
+                                </div>
+                                
                                 <!-- Comparison Results (For All Methods) -->
                                 <div id="comparison-results" class="hidden mt-4">
                                     <table class="table-striped min-w-full">
@@ -665,6 +714,63 @@
                                             <div class="text-sm lang-en">Low Risk</div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Enhanced Corrosion Rate Information -->
+                                    <div class="mt-4 p-3 bg-gray-50 rounded-md" id="corrosion-rate-info">
+                                        <h4 class="font-bold text-md mb-2">
+                                            <i class="fas fa-tachometer-alt mr-2 text-red-600"></i>
+                                            <span class="lang-ru">Прогнозируемая скорость коррозии</span>
+                                            <span class="lang-en">Predicted Corrosion Rate</span>
+                                        </h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                            <div class="bg-white p-2 rounded-md shadow-sm">
+                                                <div class="text-sm font-medium">
+                                                    <span class="lang-ru">Углеродистая сталь:</span>
+                                                    <span class="lang-en">Carbon Steel:</span>
+                                </div>
+                                                <div class="flex items-baseline">
+                                                    <span id="carbon-steel-rate" class="text-lg font-bold text-red-700">20.0</span>
+                                                    <span class="text-xs ml-1 text-gray-700">мг/см²/час</span>
+                                                </div>
+                                                <div class="text-xs text-gray-600 mt-1">
+                                                    <span class="lang-ru">Очень высокая скорость</span>
+                                                    <span class="lang-en">Very high rate</span>
+                                                </div>
+                                            </div>
+                                            <div class="bg-white p-2 rounded-md shadow-sm">
+                                                <div class="text-sm font-medium">
+                                                    <span class="lang-ru">Нерж. сталь 304:</span>
+                                                    <span class="lang-en">SS 304:</span>
+                                                </div>
+                                                <div class="flex items-baseline">
+                                                    <span id="ss304-rate" class="text-lg font-bold text-orange-600">1.0</span>
+                                                    <span class="text-xs ml-1 text-gray-700">мг/см²/час</span>
+                                                </div>
+                                                <div class="text-xs text-gray-600 mt-1">
+                                                    <span class="lang-ru">Средняя скорость</span>
+                                                    <span class="lang-en">Moderate rate</span>
+                                                </div>
+                                            </div>
+                                            <div class="bg-white p-2 rounded-md shadow-sm">
+                                                <div class="text-sm font-medium">
+                                                    <span class="lang-ru">Нерж. сталь 316L:</span>
+                                                    <span class="lang-en">SS 316L:</span>
+                                                </div>
+                                                <div class="flex items-baseline">
+                                                    <span id="ss316l-rate" class="text-lg font-bold text-green-600">0.2</span>
+                                                    <span class="text-xs ml-1 text-gray-700">мг/см²/час</span>
+                                                </div>
+                                                <div class="text-xs text-gray-600 mt-1">
+                                                    <span class="lang-ru">Низкая скорость</span>
+                                                    <span class="lang-en">Low rate</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mt-2">
+                                            <span class="lang-ru">* Скорость коррозии указана для выбранных условий и может значительно отличаться в зависимости от температуры и концентрации кислоты.</span>
+                                            <span class="lang-en">* Corrosion rate is shown for the selected conditions and may vary significantly depending on temperature and acid concentration.</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -707,6 +813,195 @@
                                 <p class="lang-ru">График показывает зависимость точки росы от содержания воды (H₂O) при фиксированных значениях других параметров.</p>
                                 <p class="lang-en">The graph shows the dependence of dew point on water content (H₂O) while other parameters remain fixed.</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reference Data Tab Content -->
+            <div id="reference-data" class="tab-content fade-in" style="display: none;">
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Reference Data Navigation -->
+                    <div class="card p-4 mb-4">
+                        <div class="flex flex-wrap mb-4">
+                            <button id="ref-h2so4-btn" class="ref-data-btn btn-primary py-1 px-3 rounded-md text-sm mr-2">
+                                <span class="lang-ru">Данные H₂SO₄</span>
+                                <span class="lang-en">H₂SO₄ Data</span>
+                            </button>
+                            <button id="ref-hcl-btn" class="ref-data-btn bg-gray-200 text-gray-700 py-1 px-3 rounded-md text-sm mr-2">
+                                <span class="lang-ru">Данные HCl</span>
+                                <span class="lang-en">HCl Data</span>
+                            </button>
+                            <button id="ref-corrosion-btn" class="ref-data-btn bg-gray-200 text-gray-700 py-1 px-3 rounded-md text-sm">
+                                <span class="lang-ru">Данные коррозии</span>
+                                <span class="lang-en">Corrosion Data</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- H2SO4 Reference Data -->
+                    <div id="ref-h2so4-data" class="card p-6">
+                        <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+                            <i class="fas fa-table mr-2 text-blue-600"></i>
+                            <span class="lang-ru">Таблица точек росы серной кислоты для газа типа SO₃-H₂O</span>
+                            <span class="lang-en">Sulfuric Acid Dew Point Table for SO₃-H₂O Gas</span>
+                        </h2>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="table-auto min-w-full border-collapse">
+                                <thead class="bg-blue-50">
+                                    <tr>
+                                        <th class="border px-4 py-2">
+                                            <span class="lang-ru">SO₃ (ppm)</span>
+                                            <span class="lang-en">SO₃ (ppm)</span>
+                                        </th>
+                                        <th class="border px-4 py-2">5% H₂O</th>
+                                        <th class="border px-4 py-2">10% H₂O</th>
+                                        <th class="border px-4 py-2">15% H₂O</th>
+                                        <th class="border px-4 py-2">20% H₂O</th>
+                                        <th class="border px-4 py-2">25% H₂O</th>
+                                        <th class="border px-4 py-2">30% H₂O</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="h2so4-table-body">
+                                    <!-- Table will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold mb-3">
+                                <span class="lang-ru">Визуализация данных</span>
+                                <span class="lang-en">Data Visualization</span>
+                            </h3>
+                            <div class="bg-white border rounded-lg p-2" style="height: 400px;">
+                                <canvas id="h2so4HeatmapChart"></canvas>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2">
+                                <span class="lang-ru">Цветовая карта показывает точку росы (°C) в зависимости от содержания SO₃ и влажности H₂O.</span>
+                                <span class="lang-en">The heatmap shows dew point (°C) as a function of SO₃ content and H₂O humidity.</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- HCl Reference Data -->
+                    <div id="ref-hcl-data" class="card p-6 hidden">
+                        <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+                            <i class="fas fa-table mr-2 text-green-600"></i>
+                            <span class="lang-ru">Таблица точек росы соляной кислоты для газа типа HCl-H₂O</span>
+                            <span class="lang-en">Hydrochloric Acid Dew Point Table for HCl-H₂O Gas</span>
+                        </h2>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="table-auto min-w-full border-collapse">
+                                <thead class="bg-green-50">
+                                    <tr>
+                                        <th class="border px-4 py-2">
+                                            <span class="lang-ru">HCl (ppm)</span>
+                                            <span class="lang-en">HCl (ppm)</span>
+                                        </th>
+                                        <th class="border px-4 py-2">5% H₂O</th>
+                                        <th class="border px-4 py-2">10% H₂O</th>
+                                        <th class="border px-4 py-2">15% H₂O</th>
+                                        <th class="border px-4 py-2">20% H₂O</th>
+                                        <th class="border px-4 py-2">25% H₂O</th>
+                                        <th class="border px-4 py-2">30% H₂O</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hcl-table-body">
+                                    <!-- Table will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold mb-3">
+                                <span class="lang-ru">Визуализация данных</span>
+                                <span class="lang-en">Data Visualization</span>
+                            </h3>
+                            <div class="bg-white border rounded-lg p-2" style="height: 400px;">
+                                <canvas id="hclHeatmapChart"></canvas>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2">
+                                <span class="lang-ru">Цветовая карта показывает точку росы (°C) в зависимости от содержания HCl и влажности H₂O.</span>
+                                <span class="lang-en">The heatmap shows dew point (°C) as a function of HCl content and H₂O humidity.</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Corrosion Data -->
+                    <div id="ref-corrosion-data" class="card p-6 hidden">
+                        <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+                            <i class="fas fa-table mr-2 text-red-600"></i>
+                            <span class="lang-ru">Данные скорости коррозии для разных материалов</span>
+                            <span class="lang-en">Corrosion Rate Data for Different Materials</span>
+                        </h2>
+                        
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-3">
+                                <span class="lang-ru">Скорость коррозии (HCl)</span>
+                                <span class="lang-en">Corrosion Rate (HCl)</span>
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-medium text-gray-700 mb-2">
+                                        <span class="lang-ru">40°C</span>
+                                        <span class="lang-en">40°C</span>
+                                    </h4>
+                                    <table class="table-auto w-full border-collapse">
+                                        <thead class="bg-red-50">
+                                            <tr>
+                                                <th class="border px-3 py-1 text-sm">
+                                                    <span class="lang-ru">Материал</span>
+                                                    <span class="lang-en">Material</span>
+                                                </th>
+                                                <th class="border px-3 py-1 text-sm">3% HCl</th>
+                                                <th class="border px-3 py-1 text-sm">10% HCl</th>
+                                                <th class="border px-3 py-1 text-sm">20% HCl</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="corrosion-table-body-40c">
+                                            <!-- Table will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-700 mb-2">
+                                        <span class="lang-ru">80°C</span>
+                                        <span class="lang-en">80°C</span>
+                                    </h4>
+                                    <table class="table-auto w-full border-collapse">
+                                        <thead class="bg-red-50">
+                                            <tr>
+                                                <th class="border px-3 py-1 text-sm">
+                                                    <span class="lang-ru">Материал</span>
+                                                    <span class="lang-en">Material</span>
+                                                </th>
+                                                <th class="border px-3 py-1 text-sm">3% HCl</th>
+                                                <th class="border px-3 py-1 text-sm">10% HCl</th>
+                                                <th class="border px-3 py-1 text-sm">20% HCl</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="corrosion-table-body-80c">
+                                            <!-- Table will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold mb-3">
+                                <span class="lang-ru">Визуализация данных</span>
+                                <span class="lang-en">Data Visualization</span>
+                            </h3>
+                            <div class="bg-white border rounded-lg p-2" style="height: 400px;">
+                                <canvas id="corrosionRateChart"></canvas>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2">
+                                <span class="lang-ru">График показывает скорость коррозии (мг/см²/час) для разных материалов при различных концентрациях HCl и температурах.</span>
+                                <span class="lang-en">The chart shows corrosion rate (mg/cm²/hour) for different materials at various HCl concentrations and temperatures.</span>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -1167,6 +1462,49 @@
 
     <!-- JavaScript -->
     <script>
+        // Function to toggle language between Russian and English
+        function toggleLanguage() {
+            console.log('Toggling language. Current language:', currentLanguage);
+            
+            // Set language toggle
+            if (currentLanguage === 'ru') {
+                // Switch to English
+                document.querySelectorAll('.lang-ru').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                document.querySelectorAll('.lang-en').forEach(el => {
+                    el.style.display = 'inline-block';
+                });
+                
+                document.documentElement.lang = 'en';
+                currentLanguage = 'en';
+            } else {
+                // Switch to Russian
+                document.querySelectorAll('.lang-en').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                document.querySelectorAll('.lang-ru').forEach(el => {
+                    el.style.display = 'inline-block';
+                });
+                
+                document.documentElement.lang = 'ru';
+                currentLanguage = 'ru';
+            }
+            
+            // Update graphs if they exist
+            if (dewPointChart) {
+                updateGraph();
+            }
+            
+            // Update reference data charts if visible
+            if (document.getElementById('reference-data').style.display === 'block') {
+                setTimeout(createHeatmapCharts, 100);
+            }
+            
+            console.log('Language switched to:', currentLanguage);
+        }
 
         const DewPointHCL = {
             "title": "Таблица точек росы соляной кислоты для газа типа HCℓ-H₂O",
@@ -1993,7 +2331,7 @@
             ]
             }
         
-            // Global variables
+        // Global variables
         let currentAcid = 'h2so4';
         let currentMethod = 'okkes';
         let currentGraphType = 'h2o';
@@ -2221,7 +2559,7 @@
             const pH2OFraction = convertToVolumeFraction(waterContent, waterUnit, pressureAtm);
             
             // Display intermediate values
-            document.getElementById('h2o-partial-pressure').textContent = pH2OmmHg.toFixed(4) + ' мм рт.ст.';
+            document.getElementById('h2o-partial-pressure').textContent = pH2OmmHg.toFixed(4) + (currentLanguage === 'ru' ? ' мм рт.ст.' : ' mmHg');
             
             // Calculate water dew point
             const waterDewPointC = calculateWaterDewPoint(pH2OmmHg, pressureAtm);
@@ -2242,7 +2580,7 @@
                 const pSO3Fraction = convertToVolumeFraction(so3Content, so3Unit, pressureAtm);
                 
                 // Display intermediate SO3 values
-                document.getElementById('so3-partial-pressure').textContent = pSO3mmHg.toFixed(4) + ' мм рт.ст.';
+                document.getElementById('so3-partial-pressure').textContent = pSO3mmHg.toFixed(4) + (currentLanguage === 'ru' ? ' мм рт.ст.' : ' mmHg');
                 
                 if (currentMethod === 'all') {
                     // Calculate dew points using all methods
@@ -2816,6 +3154,48 @@
             // Set Russian as default language
             setLanguage('ru');
             
+            // Populate reference data tables
+            populateReferenceTables();
+            
+            // Language toggle button 
+            document.getElementById('langToggle').addEventListener('click', function() {
+                console.log('Language toggle clicked, current language:', currentLanguage);
+                
+                // Toggle language
+                if (currentLanguage === 'ru') {
+                    // Switch to English
+                    document.querySelectorAll('.lang-ru').forEach(el => {
+                        el.style.display = 'none';
+                    });
+                    
+                    document.querySelectorAll('.lang-en').forEach(el => {
+                        el.style.display = 'inline-block';
+                    });
+                    
+                    document.documentElement.lang = 'en';
+                    currentLanguage = 'en';
+                } else {
+                    // Switch to Russian
+                    document.querySelectorAll('.lang-en').forEach(el => {
+                        el.style.display = 'none';
+                    });
+                    
+                    document.querySelectorAll('.lang-ru').forEach(el => {
+                        el.style.display = 'inline-block';
+                    });
+                    
+                    document.documentElement.lang = 'ru';
+                    currentLanguage = 'ru';
+                }
+                
+                // Update graph if it exists
+                if (dewPointChart) {
+                    updateGraph();
+                }
+                
+                console.log('Language switched to:', currentLanguage);
+            });
+            
             // Add event listeners for acid type buttons
             document.querySelectorAll('.acid-type-btn').forEach(button => {
                 button.addEventListener('click', function() {
@@ -2966,6 +3346,726 @@
                     if (tabId === 'calculator' && dewPointChart) {
                         dewPointChart.update();
                     }
+                    
+                    // If showing reference data tab, refresh charts
+                    if (tabId === 'reference-data') {
+                        setTimeout(createHeatmapCharts, 100); // Small delay to ensure DOM is ready
+                    }
+                });
+            });
+            
+            // Add event listeners for reference data buttons
+            document.querySelectorAll('.ref-data-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Update active button styles
+                    document.querySelectorAll('.ref-data-btn').forEach(btn => {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    
+                    this.classList.remove('bg-gray-200', 'text-gray-700');
+                    this.classList.add('btn-primary');
+                    
+                    // Hide all data panels
+                    document.getElementById('ref-h2so4-data').classList.add('hidden');
+                    document.getElementById('ref-hcl-data').classList.add('hidden');
+                    document.getElementById('ref-corrosion-data').classList.add('hidden');
+                    
+                    // Show selected panel
+                    const buttonId = this.id;
+                    if (buttonId === 'ref-h2so4-btn') {
+                        document.getElementById('ref-h2so4-data').classList.remove('hidden');
+                        setTimeout(() => createH2SO4Heatmap(), 100);
+                    } else if (buttonId === 'ref-hcl-btn') {
+                        document.getElementById('ref-hcl-data').classList.remove('hidden');
+                        setTimeout(() => createHClHeatmap(), 100);
+                    } else if (buttonId === 'ref-corrosion-btn') {
+                        document.getElementById('ref-corrosion-data').classList.remove('hidden');
+                        setTimeout(() => createCorrosionRateChart(), 100);
+                    }
+                });
+            });
+        });
+        
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Toggle language display
+            document.querySelectorAll('.lang-ru').forEach(el => {
+                el.style.display = lang === 'ru' ? 'inline-block' : 'none';
+            });
+            
+            document.querySelectorAll('.lang-en').forEach(el => {
+                el.style.display = lang === 'en' ? 'inline-block' : 'none';
+            });
+            
+            // Update unit labels
+            updateUnitLabels();
+            
+            // Update dynamically generated content
+            updateDynamicContent();
+            
+            document.documentElement.lang = lang;
+        }
+        
+        // Function to update labels in reference data charts
+        function updateReferenceDataLabels() {
+            // Update H2SO4 chart title
+            const h2so4Chart = Chart.getChart(document.getElementById('h2so4HeatmapChart'));
+            if (h2so4Chart) {
+                h2so4Chart.options.plugins.title.text = currentLanguage === 'ru' ? 
+                    'Точка росы H₂SO₄ в зависимости от SO₃ (при 10% H₂O)' : 
+                    'H₂SO₄ Dew Point vs SO₃ Content (at 10% H₂O)';
+                h2so4Chart.options.scales.y.title.text = currentLanguage === 'ru' ? 'Точка росы (°C)' : 'Dew Point (°C)';
+                h2so4Chart.update();
+            }
+            
+            // Update HCl chart title
+            const hclChart = Chart.getChart(document.getElementById('hclHeatmapChart'));
+            if (hclChart) {
+                hclChart.options.plugins.title.text = currentLanguage === 'ru' ? 
+                    'Точка росы HCl в зависимости от HCl (при 10% H₂O)' : 
+                    'HCl Dew Point vs HCl Content (at 10% H₂O)';
+                hclChart.options.scales.y.title.text = currentLanguage === 'ru' ? 'Точка росы (°C)' : 'Dew Point (°C)';
+                hclChart.update();
+            }
+            
+            // Update corrosion chart title
+            const corrosionChart = Chart.getChart(document.getElementById('corrosionRateChart'));
+            if (corrosionChart) {
+                corrosionChart.options.plugins.title.text = currentLanguage === 'ru' ? 
+                    'Скорость коррозии различных материалов в HCl' : 
+                    'Corrosion Rate of Different Materials in HCl';
+                corrosionChart.options.scales.y.title.text = currentLanguage === 'ru' ? 'Скорость коррозии (мг/см²/час)' : 'Corrosion Rate (mg/cm²/hour)';
+                corrosionChart.update();
+            }
+        }
+        
+        // Event listeners for reference data buttons
+        document.querySelectorAll('.ref-data-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active button styles
+                document.querySelectorAll('.ref-data-btn').forEach(btn => {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                });
+                
+                this.classList.remove('bg-gray-200', 'text-gray-700');
+                this.classList.add('btn-primary');
+                
+                // Hide all data panels
+                document.getElementById('ref-h2so4-data').classList.add('hidden');
+                document.getElementById('ref-hcl-data').classList.add('hidden');
+                document.getElementById('ref-corrosion-data').classList.add('hidden');
+                
+                // Show selected panel
+                const buttonId = this.id;
+                if (buttonId === 'ref-h2so4-btn') {
+                    document.getElementById('ref-h2so4-data').classList.remove('hidden');
+                    setTimeout(() => createH2SO4Heatmap(), 100);
+                } else if (buttonId === 'ref-hcl-btn') {
+                    document.getElementById('ref-hcl-data').classList.remove('hidden');
+                    setTimeout(() => createHClHeatmap(), 100);
+                } else if (buttonId === 'ref-corrosion-btn') {
+                    document.getElementById('ref-corrosion-data').classList.remove('hidden');
+                    setTimeout(() => createCorrosionRateChart(), 100);
+                }
+            });
+        });
+        
+        // Function to populate reference data tables
+        function populateReferenceTables() {
+            // Populate H2SO4 table
+            const h2so4TableBody = document.getElementById('h2so4-table-body');
+            h2so4TableBody.innerHTML = ''; // Clear existing content
+            
+            // Add rows from DewPointSourGas data
+            DewPointSourGas.data.forEach(row => {
+                if (row.so3_ppm <= 100) { // Limit to reasonable values for display
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="border px-4 py-2 font-medium">${row.so3_ppm}</td>
+                        <td class="border px-4 py-2">${row['5']}</td>
+                        <td class="border px-4 py-2">${row['10']}</td>
+                        <td class="border px-4 py-2">${row['15']}</td>
+                        <td class="border px-4 py-2">${row['20']}</td>
+                        <td class="border px-4 py-2">${row['25']}</td>
+                        <td class="border px-4 py-2">${row['30']}</td>
+                    `;
+                    h2so4TableBody.appendChild(tr);
+                }
+            });
+            
+            // Populate HCl table
+            const hclTableBody = document.getElementById('hcl-table-body');
+            hclTableBody.innerHTML = ''; // Clear existing content
+            
+            // Add rows from DewPointHCL data
+            DewPointHCL.data.forEach(row => {
+                if (row.hcl_ppm <= 1000) { // Limit to reasonable values for display
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="border px-4 py-2 font-medium">${row.hcl_ppm}</td>
+                        <td class="border px-4 py-2">${row['5']}</td>
+                        <td class="border px-4 py-2">${row['10']}</td>
+                        <td class="border px-4 py-2">${row['15']}</td>
+                        <td class="border px-4 py-2">${row['20']}</td>
+                        <td class="border px-4 py-2">${row['25']}</td>
+                        <td class="border px-4 py-2">${row['30']}</td>
+                    `;
+                    hclTableBody.appendChild(tr);
+                }
+            });
+            
+            // Populate Corrosion Rate tables
+            const corrosionTable40c = document.getElementById('corrosion-table-body-40c');
+            const corrosionTable80c = document.getElementById('corrosion-table-body-80c');
+            
+            corrosionTable40c.innerHTML = ''; // Clear existing content
+            corrosionTable80c.innerHTML = ''; // Clear existing content
+            
+            // Loop through each steel type
+            CorrosionHCL.data.forEach(steelData => {
+                // Add row for 40°C
+                const dataFor40c = steelData.datasets.find(d => d.temperature === 40);
+                if (dataFor40c) {
+                    const tr40c = document.createElement('tr');
+                    tr40c.innerHTML = `
+                        <td class="border px-3 py-1 font-medium">${steelData.steelType}</td>
+                        <td class="border px-3 py-1">${dataFor40c.points.find(p => p.concentration === 3)?.corrosionRate.toFixed(2)}</td>
+                        <td class="border px-3 py-1">${dataFor40c.points.find(p => p.concentration === 10)?.corrosionRate.toFixed(2)}</td>
+                        <td class="border px-3 py-1">${dataFor40c.points.find(p => p.concentration === 20)?.corrosionRate.toFixed(2)}</td>
+                    `;
+                    corrosionTable40c.appendChild(tr40c);
+                }
+                
+                // Add row for 80°C
+                const dataFor80c = steelData.datasets.find(d => d.temperature === 80);
+                if (dataFor80c) {
+                    const tr80c = document.createElement('tr');
+                    tr80c.innerHTML = `
+                        <td class="border px-3 py-1 font-medium">${steelData.steelType}</td>
+                        <td class="border px-3 py-1">${dataFor80c.points.find(p => p.concentration === 3)?.corrosionRate.toFixed(2)}</td>
+                        <td class="border px-3 py-1">${dataFor80c.points.find(p => p.concentration === 10)?.corrosionRate.toFixed(2)}</td>
+                        <td class="border px-3 py-1">${dataFor80c.points.find(p => p.concentration === 20)?.corrosionRate.toFixed(2)}</td>
+                    `;
+                    corrosionTable80c.appendChild(tr80c);
+                }
+            });
+        }
+        
+        // Function to find closest reference data value
+        function findClosestReferenceValue(acid, waterPercent, acidContent) {
+            let closestValue = null;
+            let closestWaterKey = null;
+            let referenceValue = null;
+            
+            // Find the closest water percentage key
+            const waterKeys = ['5', '10', '15', '20', '25', '30', '40', '45', '50', '55', '60'];
+            let minDiff = Number.MAX_VALUE;
+            
+            for (const key of waterKeys) {
+                const diff = Math.abs(parseFloat(key) - waterPercent);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestWaterKey = key;
+                }
+            }
+            
+            if (acid === 'h2so4') {
+                // Find closest SO3 content row
+                DewPointSourGas.data.forEach(row => {
+                    if (row.so3_ppm <= 100) { // Limit to reasonable range
+                        const diff = Math.abs(row.so3_ppm - acidContent);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestValue = row.so3_ppm;
+                            referenceValue = row[closestWaterKey];
+                        }
+                    }
+                });
+            } else if (acid === 'hcl') {
+                // Find closest HCl content row
+                DewPointHCL.data.forEach(row => {
+                    if (row.hcl_ppm <= 1000) { // Limit to reasonable range
+                        const diff = Math.abs(row.hcl_ppm - acidContent);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestValue = row.hcl_ppm;
+                            referenceValue = row[closestWaterKey];
+                        }
+                    }
+                });
+            } else if (acid === 'h2s') {
+                // Find closest H2S content row
+                // This is a bit more complex as we need to find the closest percentage
+                let closestPercentage = null;
+                let closestH2S = null;
+                let closestDiff = Number.MAX_VALUE;
+                
+                for (const key in row) {
+                    if (key !== 'so3_ppm' && key !== '5' && key !== '10' && key !== '15' && key !== '20' && key !== '25' && key !== '30') {
+                        const diff = Math.abs(parseFloat(key) - acidContent);
+                        if (diff < closestDiff) {
+                            closestDiff = diff;
+                            closestPercentage = key;
+                            closestH2S = row[key];
+                        }
+                    }
+                }
+                
+                closestValue = closestH2S;
+                referenceValue = closestPercentage;
+            }
+            
+            return { closestValue, referenceValue };
+        }
+        
+        // Create heatmap charts for the reference data
+        function createHeatmapCharts() {
+            // Create H2SO4 heatmap
+            createH2SO4Heatmap();
+            
+            // Create HCl heatmap
+            createHClHeatmap();
+            
+            // Create corrosion rate chart
+            createCorrosionRateChart();
+        }
+        
+        function createH2SO4Heatmap() {
+            const canvas = document.getElementById('h2so4HeatmapChart');
+            if (!canvas) return;
+            
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart(canvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            
+            // Extract data for heatmap
+            const labels = ['5%', '10%', '15%', '20%', '25%', '30%'];
+            const dataPoints = [];
+            const so3Values = [];
+            
+            // Get data from DewPointSourGas
+            DewPointSourGas.data.forEach(row => {
+                if (row.so3_ppm <= 100) { // Limit to reasonable range
+                    so3Values.push(row.so3_ppm);
+                    const rowData = [row['5'], row['10'], row['15'], row['20'], row['25'], row['30']];
+                    dataPoints.push(rowData);
+                }
+            });
+            
+            // Create interpolated color steps
+            const maxTemp = Math.max(...dataPoints.flat().filter(v => v !== undefined));
+            const minTemp = Math.min(...dataPoints.flat().filter(v => v !== undefined));
+            
+            // Create dataset with colors
+            const dataset = {
+                labels: so3Values.map(v => v + ' ppm'),
+                datasets: labels.map((label, i) => {
+                    return {
+                        label: label,
+                        data: dataPoints.map(row => row[i]),
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        parsing: {
+                            xAxisKey: 'x',
+                            yAxisKey: 'y'
+                        }
+                    };
+                })
+            };
+            
+            // Create the chart
+            const chart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: so3Values.map(v => v + ' ppm'),
+                    datasets: [{
+                        label: 'Dew Point (°C)',
+                        data: so3Values.map((so3, idx) => {
+                            return {
+                                x: so3,
+                                y: dataPoints[idx][1] // Using 10% humidity as reference
+                            };
+                        }),
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: currentLanguage === 'ru' ? 
+                                'Точка росы H₂SO₄ в зависимости от SO₃ (при 10% H₂O)' : 
+                                'H₂SO₄ Dew Point vs SO₃ Content (at 10% H₂O)'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `SO₃: ${context.raw.x} ppm, ${currentLanguage === 'ru' ? 'Точка росы' : 'Dew Point'}: ${context.raw.y}°C`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'SO₃ (ppm)'
+                            },
+                            type: 'logarithmic'
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: currentLanguage === 'ru' ? 'Точка росы (°C)' : 'Dew Point (°C)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createHClHeatmap() {
+            const canvas = document.getElementById('hclHeatmapChart');
+            if (!canvas) return;
+            
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart(canvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            
+            // Extract data for heatmap
+            const hclValues = [];
+            
+            // Get data from DewPointHCL, limiting to meaningful values
+            const limitedData = DewPointHCL.data.filter(row => row.hcl_ppm <= 1000);
+            
+            limitedData.forEach(row => {
+                hclValues.push(row.hcl_ppm);
+            });
+            
+            // Create the chart
+            const chart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: hclValues.map(v => v + ' ppm'),
+                    datasets: [{
+                        label: 'Dew Point (°C)',
+                        data: hclValues.map((hcl, idx) => {
+                            return {
+                                x: hcl,
+                                y: limitedData[idx]['10'] // Using 10% humidity as reference
+                            };
+                        }),
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: currentLanguage === 'ru' ? 
+                                'Точка росы HCl в зависимости от HCl (при 10% H₂O)' : 
+                                'HCl Dew Point vs HCl Content (at 10% H₂O)'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `HCl: ${context.raw.x} ppm, ${currentLanguage === 'ru' ? 'Точка росы' : 'Dew Point'}: ${context.raw.y}°C`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'HCl (ppm)'
+                            },
+                            type: 'logarithmic'
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: currentLanguage === 'ru' ? 'Точка росы (°C)' : 'Dew Point (°C)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createCorrosionRateChart() {
+            const canvas = document.getElementById('corrosionRateChart');
+            if (!canvas) return;
+            
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart(canvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            
+            // Prepare data for the chart
+            const steelTypes = CorrosionHCL.steelTypes;
+            const concentrations = [3, 10, 20]; // HCl concentrations
+            
+            // Datasets for 40°C and 80°C
+            const datasets40C = [];
+            const datasets80C = [];
+            
+            // Create datasets
+            steelTypes.forEach((steelType, index) => {
+                const steelData = CorrosionHCL.data.find(d => d.steelType === steelType);
+                if (steelData) {
+                    // 40°C data
+                    const data40C = steelData.datasets.find(d => d.temperature === 40);
+                    if (data40C) {
+                        datasets40C.push({
+                            label: `${steelType} (40°C)`,
+                            data: data40C.points.map(p => p.corrosionRate),
+                            backgroundColor: `rgba(54, 162, ${235 - index * 70}, 0.5)`,
+                            borderColor: `rgba(54, 162, ${235 - index * 70}, 1)`,
+                            borderWidth: 1
+                        });
+                    }
+                    
+                    // 80°C data
+                    const data80C = steelData.datasets.find(d => d.temperature === 80);
+                    if (data80C) {
+                        datasets80C.push({
+                            label: `${steelType} (80°C)`,
+                            data: data80C.points.map(p => p.corrosionRate),
+                            backgroundColor: `rgba(255, ${99 + index * 70}, 132, 0.5)`,
+                            borderColor: `rgba(255, ${99 + index * 70}, 132, 1)`,
+                            borderWidth: 1
+                        });
+                    }
+                }
+            });
+            
+            // Combine datasets
+            const allDatasets = [...datasets40C, ...datasets80C];
+            
+            // Create the chart
+            const corrosionChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: concentrations.map(c => `${c}% HCl`),
+                    datasets: allDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'HCl Concentration (%)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: currentLanguage === 'ru' ? 'Скорость коррозии (мг/см²/час)' : 'Corrosion Rate (mg/cm²/hour)'
+                            },
+                            type: 'logarithmic'
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: currentLanguage === 'ru' ? 
+                                'Скорость коррозии различных материалов в HCl' : 
+                                'Corrosion Rate of Different Materials in HCl'
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Call createHeatmapCharts when loading the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set Russian as default language
+            setLanguage('ru');
+            
+            // Populate reference data tables
+            populateReferenceTables();
+            
+            // Create heatmap charts
+            createHeatmapCharts();
+            
+            // Add event listeners for acid type buttons
+            document.querySelectorAll('.acid-type-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.acid-type-btn').forEach(btn => {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    
+                    this.classList.remove('bg-gray-200', 'text-gray-700');
+                    this.classList.add('btn-primary');
+                    
+                    currentAcid = this.getAttribute('data-acid');
+                    
+                    // Show/hide content containers
+                    document.getElementById('so3-content-container').style.display = currentAcid === 'h2so4' ? 'block' : 'none';
+                    document.getElementById('hcl-content-container').style.display = currentAcid === 'hcl' ? 'block' : 'none';
+                    document.getElementById('h2s-content-container').style.display = currentAcid === 'h2s' ? 'block' : 'none';
+                    
+                    document.getElementById('so3-partial-section').style.display = currentAcid === 'h2so4' ? 'block' : 'none';
+                    document.getElementById('hcl-partial-section').style.display = currentAcid === 'hcl' ? 'block' : 'none';
+                    document.getElementById('h2s-partial-section').style.display = currentAcid === 'h2s' ? 'block' : 'none';
+                    
+                    document.getElementById('method-selection-h2so4').style.display = currentAcid === 'h2so4' ? 'block' : 'none';
+                    document.getElementById('method-selection-hcl').style.display = currentAcid === 'hcl' ? 'block' : 'none';
+                    document.getElementById('method-selection-h2s').style.display = currentAcid === 'h2s' ? 'block' : 'none';
+                    
+                    // Update dew point title
+                    if (currentAcid === 'h2so4') {
+                        document.getElementById('acid-dew-point-title-ru').textContent = 'Точка росы H₂SO₄';
+                        document.getElementById('acid-dew-point-title-en').textContent = 'H₂SO₄ Dew Point';
+                    } else if (currentAcid === 'hcl') {
+                        document.getElementById('acid-dew-point-title-ru').textContent = 'Точка росы HCl';
+                        document.getElementById('acid-dew-point-title-en').textContent = 'HCl Dew Point';
+                    } else if (currentAcid === 'h2s') {
+                        document.getElementById('acid-dew-point-title-ru').textContent = 'Точка росы H₂S';
+                        document.getElementById('acid-dew-point-title-en').textContent = 'H₂S Dew Point';
+                    }
+                    
+                    // Update method
+                    if (currentAcid === 'h2so4') {
+                        currentMethod = document.getElementById('calculation-method-h2so4').value;
+                    } else if (currentAcid === 'hcl') {
+                        currentMethod = document.getElementById('calculation-method-hcl').value;
+                    } else if (currentAcid === 'h2s') {
+                        currentMethod = document.getElementById('calculation-method-h2s').value;
+                    }
+                    
+                    // Perform calculations
+                    performCalculations();
+                });
+            });
+            
+            // Add event listeners for method selection
+            document.getElementById('calculation-method-h2so4').addEventListener('change', function() {
+                currentMethod = this.value;
+                
+                // Show/hide comparison results
+                if (currentMethod === 'all') {
+                    document.getElementById('comparison-results').style.display = 'block';
+                    document.getElementById('single-method-results').style.display = 'none';
+                } else {
+                    document.getElementById('comparison-results').style.display = 'none';
+                    document.getElementById('single-method-results').style.display = 'flex';
+                }
+                
+                performCalculations();
+            });
+            
+            document.getElementById('calculation-method-hcl').addEventListener('change', function() {
+                currentMethod = this.value;
+                performCalculations();
+            });
+            
+            document.getElementById('calculation-method-h2s').addEventListener('change', function() {
+                currentMethod = this.value;
+                performCalculations();
+            });
+            
+            // Add event listeners for graph type buttons
+            document.querySelectorAll('.graph-type-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.graph-type-btn').forEach(btn => {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    
+                    this.classList.remove('bg-gray-200', 'text-gray-700');
+                    this.classList.add('btn-primary');
+                    
+                    currentGraphType = this.id.replace('graph-type-', '');
+                    updateGraph();
+                });
+            });
+            
+            // Add event listeners for input fields and sliders
+            const inputFields = ['water-content', 'so3-content', 'hcl-content', 'h2s-content', 'system-pressure'];
+            const sliders = ['water-content-slider', 'so3-content-slider', 'hcl-content-slider', 'h2s-content-slider', 'system-pressure-slider'];
+            
+            inputFields.forEach((field, index) => {
+                const slider = sliders[index];
+                
+                document.getElementById(field).addEventListener('input', function() {
+                    document.getElementById(slider).value = this.value;
+                    performCalculations();
+                });
+                
+                document.getElementById(slider).addEventListener('input', function() {
+                    document.getElementById(field).value = this.value;
+                    performCalculations();
+                });
+            });
+            
+            // Add event listeners for unit selectors
+            const unitSelectors = ['water-units', 'so3-units', 'hcl-units', 'h2s-units', 'pressure-units'];
+            
+            unitSelectors.forEach(selector => {
+                document.getElementById(selector).addEventListener('change', performCalculations);
+            });
+            
+            // Add event listener for calculate button
+            document.getElementById('calculate-btn').addEventListener('click', performCalculations);
+            
+            // Add event listeners for tab buttons
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Hide all tabs
+                    document.querySelectorAll('.tab-content').forEach(tab => {
+                        tab.style.display = 'none';
+                        tab.classList.remove('fade-in');
+                    });
+                    
+                    // Show selected tab
+                    document.getElementById(tabId).style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById(tabId).classList.add('fade-in');
+                    }, 10);
+                    
+                    // Set active tab button
+                    document.querySelectorAll('.tab-btn').forEach(btn => {
+                        btn.classList.remove('tab-active');
+                    });
+                    
+                    this.classList.add('tab-active');
+                    
+                    // Update graph if showing calculator tab
+                    if (tabId === 'calculator' && dewPointChart) {
+                        dewPointChart.update();
+                    }
+                    
+                    // If showing reference data tab, refresh charts
+                    if (tabId === 'reference-data') {
+                        setTimeout(createHeatmapCharts, 100); // Small delay to ensure DOM is ready
+                    }
                 });
             });
             
@@ -2981,36 +4081,99 @@
             // Perform initial calculations
             performCalculations();
         });
-        
-        function setLanguage(lang) {
-            currentLanguage = lang;
-            
-            if (lang === 'ru') {
-                document.querySelectorAll('.lang-ru').forEach(el => {
-                    el.style.display = 'inline-block';
-                });
-                
-                document.querySelectorAll('.lang-en').forEach(el => {
-                    el.style.display = 'none';
-                });
-                
-                document.documentElement.lang = 'ru';
+
+        // Update unit display texts for each language
+        function updateUnitLabels() {
+            if (currentLanguage === 'ru') {
+                document.querySelector('option[value="percent"]').textContent = '% об.';
+                document.querySelector('option[value="atm"]').textContent = 'атм';
             } else {
-                document.querySelectorAll('.lang-ru').forEach(el => {
-                    el.style.display = 'none';
-                });
-                
-                document.querySelectorAll('.lang-en').forEach(el => {
-                    el.style.display = 'inline-block';
-                });
-                
-                document.documentElement.lang = 'en';
+                document.querySelector('option[value="percent"]').textContent = '% vol.';
+                document.querySelector('option[value="atm"]').textContent = 'atm';
+            }
+        }
+
+        function getText(ruText, enText) {
+            return currentLanguage === 'ru' ? ruText : enText;
+        }
+
+        // Add this function before setLanguage function
+        function updateDynamicContent() {
+            // Update all dynamically generated content that needs language-specific text
+            
+            // Update intermediate values units if they exist
+            const h2oPartialElement = document.getElementById('h2o-partial-pressure');
+            if (h2oPartialElement && h2oPartialElement.textContent) {
+                const value = parseFloat(h2oPartialElement.textContent);
+                if (!isNaN(value)) {
+                    h2oPartialElement.textContent = value.toFixed(4) + (currentLanguage === 'ru' ? ' мм рт.ст.' : ' mmHg');
+                }
             }
             
-            // Update graph if it exists
-            if (dewPointChart) {
-                updateGraph();
+            const so3PartialElement = document.getElementById('so3-partial-pressure');
+            if (so3PartialElement && so3PartialElement.textContent) {
+                const value = parseFloat(so3PartialElement.textContent);
+                if (!isNaN(value)) {
+                    so3PartialElement.textContent = value.toFixed(4) + (currentLanguage === 'ru' ? ' мм рт.ст.' : ' mmHg');
+                }
             }
+            
+            const hclPartialElement = document.getElementById('hcl-partial-pressure');
+            if (hclPartialElement && hclPartialElement.textContent) {
+                const value = parseFloat(hclPartialElement.textContent);
+                if (!isNaN(value)) {
+                    hclPartialElement.textContent = value.toFixed(4) + (currentLanguage === 'ru' ? ' мм рт.ст.' : ' mmHg');
+                }
+            }
+            
+            const h2sPartialElement = document.getElementById('h2s-partial-pressure');
+            if (h2sPartialElement && h2sPartialElement.textContent) {
+                const value = parseFloat(h2sPartialElement.textContent);
+                if (!isNaN(value)) {
+                    h2sPartialElement.textContent = value.toFixed(4) + (currentLanguage === 'ru' ? ' мм рт.ст.' : ' mmHg');
+                }
+            }
+            
+            // Update reference data labels
+            updateReferenceDataLabels();
+            
+            // Update risk assessment text based on current acid
+            if (currentAcid) {
+                updateRiskAssessment(currentAcid);
+            }
+            
+            // Recalculate to update all labels
+            if (typeof performCalculations === 'function') {
+                performCalculations();
+            }
+        }
+
+        // Fix the unit labels function to handle all selectors
+        function updateUnitLabels() {
+            // Update percent display in all unit selectors
+            document.querySelectorAll('option[value="percent"]').forEach(option => {
+                option.textContent = currentLanguage === 'ru' ? '% об.' : '% vol.';
+            });
+            
+            // Update atm display in all unit selectors
+            document.querySelectorAll('option[value="atm"]').forEach(option => {
+                option.textContent = currentLanguage === 'ru' ? 'атм' : 'atm';
+            });
+            
+            // Update mmHg display in all unit selectors
+            document.querySelectorAll('option[value="mmHg"]').forEach(option => {
+                option.textContent = currentLanguage === 'ru' ? 'мм рт.ст.' : 'mmHg';
+            });
+            
+            // Update mg/nm3 display in all unit selectors  
+            document.querySelectorAll('option[value="mg/nm3"]').forEach(option => {
+                option.textContent = currentLanguage === 'ru' ? 'мг/нм³' : 'mg/nm³';
+            });
+        }
+
+        // Define the helper function but don't use it at the global scope
+        function getText(ruText, enText) {
+            return currentLanguage === 'ru' ? ruText : enText;
         }
     </script>
 </body>
