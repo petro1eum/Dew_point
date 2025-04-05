@@ -1,0 +1,3017 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор точки росы кислотной коррозии | Acid Dew Point Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0c4da2;
+            --secondary-color: #3a7bd5;
+            --accent-color: #00bcd4;
+            --danger-zone: rgba(255, 0, 0, 0.1);
+            --warning-zone: rgba(255, 165, 0, 0.1);
+            --safe-zone: rgba(0, 128, 0, 0.1);
+        }
+        
+        body {
+            font-family: 'Roboto', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .tab-active {
+            border-bottom: 3px solid var(--accent-color);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(58, 123, 213, 0.25);
+        }
+        
+        .range-slider {
+            width: 100%;
+            height: 5px;
+            border-radius: 5px;
+            background: #d7dcdf;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .range-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .parameter-card {
+            transition: all 0.3s ease;
+        }
+        
+        .parameter-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .result-card {
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .method-description {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        
+        .method-description.active {
+            max-height: 1000px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .corrosion-risk-low {
+            background-color: var(--safe-zone);
+            color: darkgreen;
+        }
+        
+        .corrosion-risk-medium {
+            background-color: var(--warning-zone);
+            color: darkorange;
+        }
+        
+        .corrosion-risk-high {
+            background-color: var(--danger-zone);
+            color: darkred;
+        }
+        
+        .lang-ru, .lang-en {
+            display: none;
+        }
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .equation {
+            font-family: 'Times New Roman', Times, serif;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        
+        .print-friendly {
+            color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+            
+            body {
+                font-size: 12pt;
+            }
+            
+            .card {
+                break-inside: avoid;
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .grid-cols-2, .grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="print-friendly">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="header-gradient text-white py-6 px-4 rounded-lg shadow-lg mb-8">
+            <div class="flex flex-wrap items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold lang-ru">Калькулятор точки росы кислотной коррозии</h1>
+                    <h1 class="text-3xl font-bold lang-en">Acid Dew Point Calculator</h1>
+                    <p class="text-sm mt-2 max-w-lg lang-ru">Научно точный инструмент для расчета температуры точки росы H₂SO₄, HCl и H₂S в газовых потоках</p>
+                    <p class="text-sm mt-2 max-w-lg lang-en">Scientifically accurate tool for calculating acid dew point temperatures of H₂SO₄, HCl, and H₂S in gas streams</p>
+                </div>
+                <div class="flex items-center mt-4 sm:mt-0">
+                    <button id="langToggle" class="btn-primary flex items-center">
+                        <i class="fas fa-globe mr-2"></i>
+                        <span class="lang-ru">EN</span>
+                        <span class="lang-en">RU</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap border-b border-gray-200 mb-6 no-print">
+                <button class="tab-btn px-4 py-2 mr-2 tab-active" data-tab="calculator">
+                    <i class="fas fa-calculator mr-2"></i>
+                    <span class="lang-ru">Калькулятор</span>
+                    <span class="lang-en">Calculator</span>
+                </button>
+                <button class="tab-btn px-4 py-2 mr-2" data-tab="theory">
+                    <i class="fas fa-book mr-2"></i>
+                    <span class="lang-ru">Теория и формулы</span>
+                    <span class="lang-en">Theory & Formulas</span>
+                </button>
+                <button class="tab-btn px-4 py-2 mr-2" data-tab="recommendations">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    <span class="lang-ru">Рекомендации</span>
+                    <span class="lang-en">Recommendations</span>
+                </button>
+                <button class="tab-btn px-4 py-2" data-tab="references">
+                    <i class="fas fa-book-open mr-2"></i>
+                    <span class="lang-ru">Источники</span>
+                    <span class="lang-en">References</span>
+                </button>
+            </div>
+
+            <!-- Calculator Tab Content -->
+            <div id="calculator" class="tab-content active fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Input Parameters Section -->
+                    <div class="lg:col-span-1">
+                        <div class="card p-6 mb-6">
+                            <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+                                <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
+                                <span class="lang-ru">Параметры расчета</span>
+                                <span class="lang-en">Calculation Parameters</span>
+                            </h2>
+                            
+                            <!-- Acid Type Selection -->
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <span class="lang-ru">Тип кислоты</span>
+                                    <span class="lang-en">Acid Type</span>
+                                </label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button id="acid-h2so4" class="acid-type-btn btn-primary py-2 px-3 rounded-md text-sm" data-acid="h2so4">H₂SO₄</button>
+                                    <button id="acid-hcl" class="acid-type-btn bg-gray-200 text-gray-700 py-2 px-3 rounded-md text-sm" data-acid="hcl">HCl</button>
+                                    <button id="acid-h2s" class="acid-type-btn bg-gray-200 text-gray-700 py-2 px-3 rounded-md text-sm" data-acid="h2s">H₂S</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Calculation Method -->
+                            <div class="mb-4" id="method-selection-h2so4">
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <span class="lang-ru">Метод расчета</span>
+                                    <span class="lang-en">Calculation Method</span>
+                                </label>
+                                <select id="calculation-method-h2so4" class="form-control">
+                                    <option value="okkes" class="lang-ru">Okkes (1987) - стандартный метод</option>
+                                    <option value="okkes" class="lang-en">Okkes (1987) - standard method</option>
+                                    <option value="verhoff" class="lang-ru">Verhoff & Banchero (1974)</option>
+                                    <option value="verhoff" class="lang-en">Verhoff & Banchero (1974)</option>
+                                    <option value="zarenezhad" class="lang-ru">ZareNezhad (2009)</option>
+                                    <option value="zarenezhad" class="lang-en">ZareNezhad (2009)</option>
+                                    <option value="all" class="lang-ru">Все методы (сравнение)</option>
+                                    <option value="all" class="lang-en">All methods (comparison)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4 hidden" id="method-selection-hcl">
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <span class="lang-ru">Метод расчета</span>
+                                    <span class="lang-en">Calculation Method</span>
+                                </label>
+                                <select id="calculation-method-hcl" class="form-control">
+                                    <option value="kiang" class="lang-ru">Kiang (1981)</option>
+                                    <option value="kiang" class="lang-en">Kiang (1981)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4 hidden" id="method-selection-h2s">
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <span class="lang-ru">Метод расчета</span>
+                                    <span class="lang-en">Calculation Method</span>
+                                </label>
+                                <select id="calculation-method-h2s" class="form-control">
+                                    <option value="antoine" class="lang-ru">Уравнение Антуана (NIST)</option>
+                                    <option value="antoine" class="lang-en">Antoine Equation (NIST)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Water Content -->
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <span class="lang-ru">Содержание воды (H₂O)</span>
+                                    <span class="lang-en">Water Content (H₂O)</span>
+                                </label>
+                                <div class="flex mb-2">
+                                    <input type="number" id="water-content" class="form-control mr-2" value="10" min="0" max="100" step="0.1">
+                                    <select id="water-units" class="form-control w-24">
+                                        <option value="percent">% об.</option>
+                                        <option value="ppm">ppm</option>
+                                        <option value="mg/nm3">мг/нм³</option>
+                                    </select>
+                                </div>
+                                <input type="range" id="water-content-slider" class="range-slider" min="0" max="30" value="10" step="0.1">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>0%</span>
+                                    <span>15%</span>
+                                    <span>30%</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Acid Content (SO3) -->
+                            <div class="mb-4" id="so3-content-container">
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <span class="lang-ru">Содержание SO₃</span>
+                                    <span class="lang-en">SO₃ Content</span>
+                                    <span class="tooltip">
+                                        <i class="fas fa-info-circle text-blue-500"></i>
+                                        <span class="tooltiptext lang-ru">В дымовых газах обычно 2-4% SO₂ конвертируется в SO₃</span>
+                                        <span class="tooltiptext lang-en">In flue gases, typically 2-4% of SO₂ is converted to SO₃</span>
+                                    </span>
+                                </label>
+                                <div class="flex mb-2">
+                                    <input type="number" id="so3-content" class="form-control mr-2" value="5" min="0" max="1000" step="1">
+                                    <select id="so3-units" class="form-control w-24">
+                                        <option value="ppm">ppm</option>
+                                        <option value="percent">% об.</option>
+                                        <option value="mg/nm3">мг/нм³</option>
+                                    </select>
+                                </div>
+                                <input type="range" id="so3-content-slider" class="range-slider" min="0" max="100" value="5" step="1">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>0 ppm</span>
+                                    <span>50 ppm</span>
+                                    <span>100 ppm</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Acid Content (HCl) -->
+                            <div class="mb-4 hidden" id="hcl-content-container">
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <span class="lang-ru">Содержание HCl</span>
+                                    <span class="lang-en">HCl Content</span>
+                                </label>
+                                <div class="flex mb-2">
+                                    <input type="number" id="hcl-content" class="form-control mr-2" value="100" min="0" max="10000" step="1">
+                                    <select id="hcl-units" class="form-control w-24">
+                                        <option value="ppm">ppm</option>
+                                        <option value="percent">% об.</option>
+                                        <option value="mg/nm3">мг/нм³</option>
+                                    </select>
+                                </div>
+                                <input type="range" id="hcl-content-slider" class="range-slider" min="0" max="1000" value="100" step="10">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>0 ppm</span>
+                                    <span>500 ppm</span>
+                                    <span>1000 ppm</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Acid Content (H2S) -->
+                            <div class="mb-4 hidden" id="h2s-content-container">
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <span class="lang-ru">Содержание H₂S</span>
+                                    <span class="lang-en">H₂S Content</span>
+                                </label>
+                                <div class="flex mb-2">
+                                    <input type="number" id="h2s-content" class="form-control mr-2" value="1" min="0" max="100" step="0.1">
+                                    <select id="h2s-units" class="form-control w-24">
+                                        <option value="percent">% об.</option>
+                                        <option value="ppm">ppm</option>
+                                        <option value="mg/nm3">мг/нм³</option>
+                                    </select>
+                                </div>
+                                <input type="range" id="h2s-content-slider" class="range-slider" min="0" max="10" value="1" step="0.1">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>0%</span>
+                                    <span>5%</span>
+                                    <span>10%</span>
+                                </div>
+                            </div>
+                            
+                            <!-- System Pressure -->
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <span class="lang-ru">Давление системы</span>
+                                    <span class="lang-en">System Pressure</span>
+                                </label>
+                                <div class="flex mb-2">
+                                    <input type="number" id="system-pressure" class="form-control mr-2" value="1" min="0.1" max="10" step="0.01">
+                                    <select id="pressure-units" class="form-control w-24">
+                                        <option value="atm">атм</option>
+                                        <option value="bar">бар</option>
+                                        <option value="kPa">кПа</option>
+                                        <option value="mmHg">мм рт.ст.</option>
+                                    </select>
+                                </div>
+                                <input type="range" id="system-pressure-slider" class="range-slider" min="0.5" max="2" value="1" step="0.01">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>0.5 атм</span>
+                                    <span>1 атм</span>
+                                    <span>2 атм</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Calculate Button -->
+                            <button id="calculate-btn" class="btn-primary w-full py-3 font-bold text-lg">
+                                <i class="fas fa-calculator mr-2"></i>
+                                <span class="lang-ru">Рассчитать</span>
+                                <span class="lang-en">Calculate</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Intermediate Values Card -->
+                        <div class="card p-6">
+                            <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+                                <i class="fas fa-microscope mr-2 text-blue-600"></i>
+                                <span class="lang-ru">Промежуточные значения</span>
+                                <span class="lang-en">Intermediate Values</span>
+                            </h2>
+                            <div id="intermediate-values">
+                                <div class="mb-3">
+                                    <span class="font-medium lang-ru">Парциальное давление H₂O:</span>
+                                    <span class="font-medium lang-en">H₂O Partial Pressure:</span>
+                                    <span id="h2o-partial-pressure" class="ml-2">76.0 мм рт.ст.</span>
+                                </div>
+                                <div class="mb-3" id="so3-partial-section">
+                                    <span class="font-medium lang-ru">Парциальное давление SO₃:</span>
+                                    <span class="font-medium lang-en">SO₃ Partial Pressure:</span>
+                                    <span id="so3-partial-pressure" class="ml-2">0.0038 мм рт.ст.</span>
+                                </div>
+                                <div class="mb-3 hidden" id="hcl-partial-section">
+                                    <span class="font-medium lang-ru">Парциальное давление HCl:</span>
+                                    <span class="font-medium lang-en">HCl Partial Pressure:</span>
+                                    <span id="hcl-partial-pressure" class="ml-2">0.076 мм рт.ст.</span>
+                                </div>
+                                <div class="mb-3 hidden" id="h2s-partial-section">
+                                    <span class="font-medium lang-ru">Парциальное давление H₂S:</span>
+                                    <span class="font-medium lang-en">H₂S Partial Pressure:</span>
+                                    <span id="h2s-partial-pressure" class="ml-2">7.6 мм рт.ст.</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-4 border-t pt-2">
+                                    <p class="lang-ru">Значения пересчитаны в единицы, используемые в формулах</p>
+                                    <p class="lang-en">Values are converted to units used in formulas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Results and Graphs Section -->
+                    <div class="lg:col-span-2">
+                        <!-- Results Card -->
+                        <div class="card p-6 mb-6 result-card">
+                            <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+                                <i class="fas fa-thermometer-half mr-2 text-blue-600"></i>
+                                <span class="lang-ru">Результаты расчета</span>
+                                <span class="lang-en">Calculation Results</span>
+                            </h2>
+                            <div id="results">
+                                <!-- Calculation Results Will Be Displayed Here -->
+                                <div id="single-method-results">
+                                    <div class="flex flex-wrap gap-4">
+                                        <div class="parameter-card bg-blue-50 p-4 rounded-lg shadow-sm border border-blue-100 flex-1 min-w-[240px] fade-in">
+                                            <h3 class="font-bold text-blue-800 mb-2">
+                                                <span id="acid-dew-point-title-ru" class="lang-ru">Точка росы H₂SO₄</span>
+                                                <span id="acid-dew-point-title-en" class="lang-en">H₂SO₄ Dew Point</span>
+                                            </h3>
+                                            <div class="flex items-end">
+                                                <span id="h2so4-dew-point" class="text-4xl font-bold text-blue-900">130.5</span>
+                                                <span class="text-xl ml-1 text-blue-700">°C</span>
+                                            </div>
+                                            <div class="text-sm text-blue-600 mt-1" id="h2so4-dew-point-f">(266.9 °F)</div>
+                                            <div class="text-xs text-gray-500 mt-2">
+                                                <span class="lang-ru">Метод: Okkes (1987)</span>
+                                                <span class="lang-en">Method: Okkes (1987)</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="parameter-card bg-green-50 p-4 rounded-lg shadow-sm border border-green-100 flex-1 min-w-[240px] fade-in">
+                                            <h3 class="font-bold text-green-800 mb-2">
+                                                <span class="lang-ru">Рекомендуемая температура</span>
+                                                <span class="lang-en">Recommended Temperature</span>
+                                            </h3>
+                                            <div class="flex items-end">
+                                                <span id="recommended-temp" class="text-4xl font-bold text-green-900">140.5</span>
+                                                <span class="text-xl ml-1 text-green-700">°C</span>
+                                            </div>
+                                            <div class="text-sm text-green-600 mt-1" id="recommended-temp-f">(284.9 °F)</div>
+                                            <div class="text-xs text-gray-500 mt-2">
+                                                <span class="lang-ru">С запасом +10°C от точки росы</span>
+                                                <span class="lang-en">With +10°C safety margin</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="parameter-card bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-100 flex-1 min-w-[240px] fade-in">
+                                            <h3 class="font-bold text-gray-800 mb-2">
+                                                <span class="lang-ru">Точка росы воды</span>
+                                                <span class="lang-en">Water Dew Point</span>
+                                            </h3>
+                                            <div class="flex items-end">
+                                                <span id="water-dew-point" class="text-4xl font-bold text-gray-900">45.8</span>
+                                                <span class="text-xl ml-1 text-gray-700">°C</span>
+                                            </div>
+                                            <div class="text-sm text-gray-600 mt-1" id="water-dew-point-f">(114.4 °F)</div>
+                                            <div class="text-xs text-gray-500 mt-2">
+                                                <span class="lang-ru">При 10% об. H₂O и 1 атм</span>
+                                                <span class="lang-en">At 10% vol. H₂O and 1 atm</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Comparison Results (For All Methods) -->
+                                <div id="comparison-results" class="hidden mt-4">
+                                    <table class="table-striped min-w-full">
+                                        <thead>
+                                            <tr class="bg-gray-100">
+                                                <th class="px-4 py-2 text-left">
+                                                    <span class="lang-ru">Метод</span>
+                                                    <span class="lang-en">Method</span>
+                                                </th>
+                                                <th class="px-4 py-2 text-left">
+                                                    <span class="lang-ru">Точка росы (°C)</span>
+                                                    <span class="lang-en">Dew Point (°C)</span>
+                                                </th>
+                                                <th class="px-4 py-2 text-left">
+                                                    <span class="lang-ru">Точка росы (°F)</span>
+                                                    <span class="lang-en">Dew Point (°F)</span>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="px-4 py-2 font-medium">Okkes (1987)</td>
+                                                <td class="px-4 py-2" id="okkes-result">130.5 °C</td>
+                                                <td class="px-4 py-2" id="okkes-result-f">266.9 °F</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-medium">Verhoff (1974)</td>
+                                                <td class="px-4 py-2" id="verhoff-result">122.3 °C</td>
+                                                <td class="px-4 py-2" id="verhoff-result-f">252.1 °F</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-medium">ZareNezhad (2009)</td>
+                                                <td class="px-4 py-2" id="zarenezhad-result">126.8 °C</td>
+                                                <td class="px-4 py-2" id="zarenezhad-result-f">260.2 °F</td>
+                                            </tr>
+                                            <tr class="bg-blue-50">
+                                                <td class="px-4 py-2 font-medium text-blue-800">
+                                                    <span class="lang-ru">Максимальное значение</span>
+                                                    <span class="lang-en">Maximum Value</span>
+                                                </td>
+                                                <td class="px-4 py-2 font-bold text-blue-800" id="max-result">130.5 °C</td>
+                                                <td class="px-4 py-2 font-bold text-blue-800" id="max-result-f">266.9 °F</td>
+                                            </tr>
+                                            <tr class="bg-green-50">
+                                                <td class="px-4 py-2 font-medium text-green-800">
+                                                    <span class="lang-ru">Рекомендуемая температура</span>
+                                                    <span class="lang-en">Recommended Temperature</span>
+                                                </td>
+                                                <td class="px-4 py-2 font-bold text-green-800" id="recommended-result">140.5 °C</td>
+                                                <td class="px-4 py-2 font-bold text-green-800" id="recommended-result-f">284.9 °F</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Risk Assessment -->
+                                <div class="mt-6 p-4 rounded-lg" id="risk-assessment">
+                                    <h3 class="font-bold text-lg mb-2">
+                                        <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>
+                                        <span class="lang-ru">Оценка риска коррозии</span>
+                                        <span class="lang-en">Corrosion Risk Assessment</span>
+                                    </h3>
+                                    <p id="risk-description" class="mb-2">
+                                        <span class="lang-ru">При работе оборудования на температурах ниже точки росы кислоты существует риск интенсивной коррозии.</span>
+                                        <span class="lang-en">Operating equipment at temperatures below the acid dew point poses a risk of intensive corrosion.</span>
+                                    </p>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3">
+                                        <div class="corrosion-risk-high p-2 rounded-md text-center">
+                                            <div class="font-medium">T < Tdp</div>
+                                            <div class="text-sm lang-ru">Высокий риск</div>
+                                            <div class="text-sm lang-en">High Risk</div>
+                                        </div>
+                                        <div class="corrosion-risk-medium p-2 rounded-md text-center">
+                                            <div class="font-medium">Tdp < T < Tdp + 10°C</div>
+                                            <div class="text-sm lang-ru">Средний риск</div>
+                                            <div class="text-sm lang-en">Medium Risk</div>
+                                        </div>
+                                        <div class="corrosion-risk-low p-2 rounded-md text-center">
+                                            <div class="font-medium">T > Tdp + 10°C</div>
+                                            <div class="text-sm lang-ru">Низкий риск</div>
+                                            <div class="text-sm lang-en">Low Risk</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Graph Card -->
+                        <div class="card p-6">
+                            <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+                                <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+                                <span class="lang-ru">Графический анализ</span>
+                                <span class="lang-en">Graphical Analysis</span>
+                            </h2>
+                            
+                            <!-- Graph Controls -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <button id="graph-type-h2o" class="graph-type-btn btn-primary py-1 px-3 rounded-md text-sm">
+                                    <span class="lang-ru">Зависимость от H₂O</span>
+                                    <span class="lang-en">H₂O Dependence</span>
+                                </button>
+                                <button id="graph-type-acid" class="graph-type-btn bg-gray-200 text-gray-700 py-1 px-3 rounded-md text-sm">
+                                    <span class="lang-ru">Зависимость от кислоты</span>
+                                    <span class="lang-en">Acid Dependence</span>
+                                </button>
+                                <button id="graph-type-pressure" class="graph-type-btn bg-gray-200 text-gray-700 py-1 px-3 rounded-md text-sm">
+                                    <span class="lang-ru">Зависимость от давления</span>
+                                    <span class="lang-en">Pressure Dependence</span>
+                                </button>
+                                <button id="graph-type-compare" class="graph-type-btn bg-gray-200 text-gray-700 py-1 px-3 rounded-md text-sm">
+                                    <span class="lang-ru">Сравнение методов</span>
+                                    <span class="lang-en">Method Comparison</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Graph Canvas -->
+                            <div class="bg-white border rounded-lg p-2" style="height: 400px;">
+                                <canvas id="dewPointChart"></canvas>
+                            </div>
+                            
+                            <!-- Graph Description -->
+                            <div class="mt-4 text-sm text-gray-600" id="graph-description">
+                                <p class="lang-ru">График показывает зависимость точки росы от содержания воды (H₂O) при фиксированных значениях других параметров.</p>
+                                <p class="lang-en">The graph shows the dependence of dew point on water content (H₂O) while other parameters remain fixed.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theory Tab Content -->
+            <div id="theory" class="tab-content fade-in" style="display: none;">
+                <div class="card p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">
+                        <i class="fas fa-book mr-2 text-blue-600"></i>
+                        <span class="lang-ru">Теория и формулы</span>
+                        <span class="lang-en">Theory & Formulas</span>
+                    </h2>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">
+                            <span class="lang-ru">Что такое кислотная точка росы?</span>
+                            <span class="lang-en">What is Acid Dew Point?</span>
+                        </h3>
+                        <p class="mb-3 lang-ru">
+                            Температура кислотной точки росы – это температура, при которой пары кислот в газовой смеси начинают конденсироваться в жидкую фазу. В контексте дымовых и технологических газов это обычно относится к конденсации кислых компонентов, таких как серная кислота (H₂SO₄), соляная кислота (HCl) или сероводород (H₂S), на холодных поверхностях.
+                        </p>
+                        <p class="mb-3 lang-en">
+                            Acid dew point temperature is the temperature at which acid vapors in a gas mixture begin to condense into liquid phase. In the context of flue and process gases, this usually refers to the condensation of acidic components such as sulfuric acid (H₂SO₄), hydrochloric acid (HCl), or hydrogen sulfide (H₂S) on cold surfaces.
+                        </p>
+                        <p class="mb-3 lang-ru">
+                            Конденсация даже небольших количеств этих кислот может значительно повысить точку росы газа – например, при содержании SO₃ порядка 0,005% об. и 10% H₂O точка росы газов достигает ~150 °С, тогда как точка росы чистого водяного пара при тех же условиях составляет около 45-50 °С.
+                        </p>
+                        <p class="mb-3 lang-en">
+                            Condensation of even small amounts of these acids can significantly raise the dew point of the gas - for example, with SO₃ content of about 0.005% vol. and 10% H₂O, the gas dew point reaches ~150 °C, while the dew point of pure water vapor under the same conditions is about 45-50 °C.
+                        </p>
+                    </div>
+                    
+                    <!-- H2SO4 Section -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-blue-700">
+                            <span class="lang-ru">Расчет точки росы серной кислоты (H₂SO₄)</span>
+                            <span class="lang-en">Sulfuric Acid (H₂SO₄) Dew Point Calculation</span>
+                        </h3>
+                        
+                        <div class="mb-4">
+                            <h4 class="font-medium mb-2">
+                                <span class="lang-ru">Формула Verhoff & Banchero (1974)</span>
+                                <span class="lang-en">Verhoff & Banchero Formula (1974)</span>
+                            </h4>
+                            <div class="equation">
+                                \frac{1000}{T} = 2.276 - 0.02943\ln(p_{H_{2}O}) - 0.0858\ln(p_{SO_{3}}) + 0.0062\ln(p_{H_{2}O})\ln(p_{SO_{3}})
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 lang-ru">
+                                где T – температура точки росы в К, p<sub>H₂O</sub> и p<sub>SO₃</sub> – парциальные давления H₂O и SO₃ (в мм рт.ст.).
+                            </p>
+                            <p class="text-sm text-gray-600 mt-2 lang-en">
+                                where T is the dew point temperature in K, p<sub>H₂O</sub> and p<sub>SO₃</sub> are the partial pressures of H₂O and SO₃ (in mmHg).
+                            </p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4 class="font-medium mb-2">
+                                <span class="lang-ru">Формула Okkes (1987)</span>
+                                <span class="lang-en">Okkes Formula (1987)</span>
+                            </h4>
+                            <div class="equation">
+                                T_{росы}^{H_{2}SO_{4}} (°C) = 203.25 + 27.6\log_{10}(p_{H_{2}O}) + 10.83\log_{10}(p_{SO_{3}}) + 1.06[\log_{10}(p_{SO_{3}}) + 8]^{2.19}
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 lang-ru">
+                                где p<sub>H₂O</sub> и p<sub>SO₃</sub> – объёмные доли H₂O и SO₃ (безразмерные величины).
+                            </p>
+                            <p class="text-sm text-gray-600 mt-2 lang-en">
+                                where p<sub>H₂O</sub> and p<sub>SO₃</sub> are the volume fractions of H₂O and SO₃ (dimensionless).
+                            </p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4 class="font-medium mb-2">
+                                <span class="lang-ru">Формула ZareNezhad (2009)</span>
+                                <span class="lang-en">ZareNezhad Formula (2009)</span>
+                            </h4>
+                            <div class="equation">
+                                T_{росы}^{H_{2}SO_{4}} (°C) = 150 + 8.1328\ln(p_{H_{2}O}) + 11.664\ln(p_{SO_{3}}) - 0.38226\ln(p_{H_{2}O})\ln(p_{SO_{3}})
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 lang-ru">
+                                где p<sub>H₂O</sub> и p<sub>SO₃</sub> – парциальные давления в мм рт.ст.
+                            </p>
+                            <p class="text-sm text-gray-600 mt-2 lang-en">
+                                where p<sub>H₂O</sub> and p<sub>SO₃</sub> are the partial pressures in mmHg.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- HCl Section -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-green-700">
+                            <span class="lang-ru">Расчет точки росы соляной кислоты (HCl)</span>
+                            <span class="lang-en">Hydrochloric Acid (HCl) Dew Point Calculation</span>
+                        </h3>
+                        
+                        <div class="mb-4">
+                            <h4 class="font-medium mb-2">
+                                <span class="lang-ru">Формула Kiang (1981)</span>
+                                <span class="lang-en">Kiang Formula (1981)</span>
+                            </h4>
+                            <div class="equation">
+                                \frac{1000}{T} = 3.7368 - 0.1591\ln(p_{H_{2}O}) - 0.0326\ln(p_{HCl}) + 0.00269\ln(p_{H_{2}O})\ln(p_{HCl})
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 lang-ru">
+                                где T – температура в K, p<sub>H₂O</sub> и p<sub>HCl</sub> – парциальные давления воды и HCl в мм рт.ст.
+                            </p>
+                            <p class="text-sm text-gray-600 mt-2 lang-en">
+                                where T is temperature in K, p<sub>H₂O</sub> and p<sub>HCl</sub> are the partial pressures of water and HCl in mmHg.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- H2S Section -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-purple-700">
+                            <span class="lang-ru">Расчет точки росы сероводорода (H₂S)</span>
+                            <span class="lang-en">Hydrogen Sulfide (H₂S) Dew Point Calculation</span>
+                        </h3>
+                        
+                        <div class="mb-4">
+                            <h4 class="font-medium mb-2">
+                                <span class="lang-ru">Уравнение Антуана (по данным NIST)</span>
+                                <span class="lang-en">Antoine Equation (NIST data)</span>
+                            </h4>
+                            <p class="mb-2 lang-ru">
+                                Для расчета используется уравнение Антуана, которое связывает давление насыщенного пара с температурой:
+                            </p>
+                            <p class="mb-2 lang-en">
+                                The Antoine equation is used for calculation, which relates saturated vapor pressure to temperature:
+                            </p>
+                            <div class="equation">
+                                \log_{10}P(\text{бар}) = 4.52887 - \frac{958.587}{T(K) - 0.539}
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 lang-ru">
+                                Действительно для диапазона температур 212.8–349.5 K (от -60.3 °С до +76.4 °С).
+                            </p>
+                            <p class="text-sm text-gray-600 mt-2 lang-en">
+                                Valid for temperature range 212.8–349.5 K (from -60.3 °C to +76.4 °C).
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Conversion Section -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">
+                            <span class="lang-ru">Пересчет единиц измерения</span>
+                            <span class="lang-en">Unit Conversion</span>
+                        </h3>
+                        
+                        <div class="mb-4">
+                            <h4 class="font-medium mb-2">
+                                <span class="lang-ru">Перевод % или ppm в парциальное давление</span>
+                                <span class="lang-en">Converting % or ppm to partial pressure</span>
+                            </h4>
+                            <p class="mb-2 lang-ru">
+                                • 1% об. = 0.01 (безразмерно) = 0.01 атм при 1 атм общего давления (≈7.6 мм рт.ст.)<br>
+                                • 1 ppm = 1×10⁻⁶ доля = 1×10⁻⁶ атм (≈0.00076 мм рт.ст.)
+                            </p>
+                            <p class="mb-2 lang-en">
+                                • 1% vol. = 0.01 (dimensionless) = 0.01 atm at 1 atm total pressure (≈7.6 mmHg)<br>
+                                • 1 ppm = 1×10⁻⁶ fraction = 1×10⁻⁶ atm (≈0.00076 mmHg)
+                            </p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4 class="font-medium mb-2">
+                                <span class="lang-ru">Перевод единиц давления</span>
+                                <span class="lang-en">Pressure unit conversion</span>
+                            </h4>
+                            <p class="mb-2 lang-ru">
+                                • 1 атм = 760 мм рт.ст. = 1.01325 бар = 101.325 кПа<br>
+                                • 1 бар = 750.06 мм рт.ст. = 0.986923 атм = 100 кПа<br>
+                                • 1 кПа = 7.50062 мм рт.ст. = 0.00986923 атм = 0.01 бар
+                            </p>
+                            <p class="mb-2 lang-en">
+                                • 1 atm = 760 mmHg = 1.01325 bar = 101.325 kPa<br>
+                                • 1 bar = 750.06 mmHg = 0.986923 atm = 100 kPa<br>
+                                • 1 kPa = 7.50062 mmHg = 0.00986923 atm = 0.01 bar
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations Tab Content -->
+            <div id="recommendations" class="tab-content fade-in" style="display: none;">
+                <div class="card p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">
+                        <i class="fas fa-shield-alt mr-2 text-blue-600"></i>
+                        <span class="lang-ru">Рекомендации по предотвращению коррозии</span>
+                        <span class="lang-en">Corrosion Prevention Recommendations</span>
+                    </h2>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">
+                            <span class="lang-ru">Общие принципы</span>
+                            <span class="lang-en">General Principles</span>
+                        </h3>
+                        <ul class="list-disc ml-6 space-y-2">
+                            <li class="lang-ru">
+                                <strong>Температурный режим:</strong> Поддерживайте температуру поверхностей оборудования выше точки росы кислоты с запасом не менее 10°C.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Temperature control:</strong> Maintain equipment surface temperatures above the acid dew point with a margin of at least 10°C.
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Мониторинг:</strong> Регулярно контролируйте состав газа, особенно содержание SO₃, HCl и H₂O, для своевременного обнаружения изменений, которые могут повлиять на точку росы.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Monitoring:</strong> Regularly monitor gas composition, especially SO₃, HCl, and H₂O content, to detect changes that may affect the dew point.
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Теплоизоляция:</strong> Используйте качественную теплоизоляцию для предотвращения локального охлаждения поверхностей ниже точки росы.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Thermal insulation:</strong> Use high-quality thermal insulation to prevent local cooling of surfaces below the dew point.
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">
+                            <span class="lang-ru">Материалы и покрытия</span>
+                            <span class="lang-en">Materials and Coatings</span>
+                        </h3>
+                        
+                        <h4 class="font-medium mb-2 text-blue-700">
+                            <span class="lang-ru">Для защиты от серной кислоты (H₂SO₄)</span>
+                            <span class="lang-en">For sulfuric acid (H₂SO₄) protection</span>
+                        </h4>
+                        <ul class="list-disc ml-6 space-y-1 mb-4">
+                            <li class="lang-ru">
+                                <strong>Нержавеющие стали:</strong> Используйте стали марок 316L, 317L или специальные сплавы с содержанием молибдена.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Stainless steels:</strong> Use 316L, 317L grades or special alloys with molybdenum content.
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Никелевые сплавы:</strong> Хастеллой (Hastelloy), Инконель (Inconel) для особо агрессивных условий.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Nickel alloys:</strong> Hastelloy, Inconel for particularly aggressive conditions.
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Покрытия:</strong> Фторполимерные покрытия (PTFE, PFA), эмали, стеклоэмалевые покрытия.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Coatings:</strong> Fluoropolymer coatings (PTFE, PFA), enamels, glass-enamel coatings.
+                            </li>
+                        </ul>
+                        
+                        <h4 class="font-medium mb-2 text-green-700">
+                            <span class="lang-ru">Для защиты от соляной кислоты (HCl)</span>
+                            <span class="lang-en">For hydrochloric acid (HCl) protection</span>
+                        </h4>
+                        <ul class="list-disc ml-6 space-y-1 mb-4">
+                            <li class="lang-ru">
+                                <strong>Специальные стали:</strong> S-TEN™ и другие хлоридостойкие марки.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Special steels:</strong> S-TEN™ and other chloride-resistant grades.
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Полимерные материалы:</strong> FRP (стеклопластик), CPVC, полипропилен.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Polymer materials:</strong> FRP (fiberglass reinforced plastic), CPVC, polypropylene.
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Титановые сплавы:</strong> Для особо ответственных применений.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Titanium alloys:</strong> For critical applications.
+                            </li>
+                        </ul>
+                        
+                        <h4 class="font-medium mb-2 text-purple-700">
+                            <span class="lang-ru">Для защиты от сероводорода (H₂S)</span>
+                            <span class="lang-en">For hydrogen sulfide (H₂S) protection</span>
+                        </h4>
+                        <ul class="list-disc ml-6 space-y-1">
+                            <li class="lang-ru">
+                                <strong>Влагоустойчивые стали:</strong> Сплавы, устойчивые к сульфидному растрескиванию (SSC).
+                            </li>
+                            <li class="lang-en">
+                                <strong>Moisture-resistant steels:</strong> Alloys resistant to sulfide stress cracking (SSC).
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Осушка газа:</strong> Поддержание температуры выше точки росы воды для предотвращения образования влажного H₂S.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Gas drying:</strong> Maintaining temperature above the water dew point to prevent the formation of wet H₂S.
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">
+                            <span class="lang-ru">Инженерные решения</span>
+                            <span class="lang-en">Engineering Solutions</span>
+                        </h3>
+                        <ul class="list-disc ml-6 space-y-2">
+                            <li class="lang-ru">
+                                <strong>Конструктивные меры:</strong> Проектирование оборудования с учетом возможности дренажа конденсата, избегание застойных зон.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Design measures:</strong> Equipment design with possibility for condensate drainage, avoiding stagnant zones.
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Подогрев:</strong> Использование обогрева труб и оборудования для поддержания температуры выше точки росы.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Heating:</strong> Use of pipe and equipment heating to maintain temperature above the dew point.
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Кондиционирование газа:</strong> Снижение содержания кислотообразующих компонентов (SO₃, HCl) с помощью скрубберов или фильтров.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Gas conditioning:</strong> Reduction of acid-forming components (SO₃, HCl) using scrubbers or filters.
+                            </li>
+                            <li class="lang-ru">
+                                <strong>Полимерные теплообменники:</strong> Использование теплообменников из коррозионностойких полимеров для рекуперации тепла в зоне конденсации кислот.
+                            </li>
+                            <li class="lang-en">
+                                <strong>Polymer heat exchangers:</strong> Use of heat exchangers made from corrosion-resistant polymers for heat recovery in the acid condensation zone.
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">
+                            <span class="lang-ru">Практические запасы</span>
+                            <span class="lang-en">Practical Margins</span>
+                        </h3>
+                        <p class="mb-3 lang-ru">
+                            Инженерные рекомендации по эксплуатации оборудования обычно советуют иметь запас по температуре над рассчитанной точкой росы. Часто применяют дополнительный запас ≥10 °С сверх вычисленной кислотной точки росы.
+                        </p>
+                        <p class="mb-3 lang-en">
+                            Engineering recommendations for equipment operation usually advise having a temperature margin above the calculated dew point. An additional margin of ≥10 °C above the calculated acid dew point is often applied.
+                        </p>
+                        <p class="mb-3 lang-ru">
+                            Это учитывает неточности формул, возможные колебания состава (например, всплески SO₃) и неравномерность температур поверхности. Таким образом, если расчет дал Tₑ=130 °С, то газы стараются охлаждать не ниже ~140 °С.
+                        </p>
+                        <p class="mb-3 lang-en">
+                            This accounts for formula inaccuracies, possible composition fluctuations (for example, SO₃ spikes), and surface temperature non-uniformity. Thus, if the calculation gave Tₑ=130 °С, the gases are kept above ~140 °С.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- References Tab Content -->
+            <div id="references" class="tab-content fade-in" style="display: none;">
+                <div class="card p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">
+                        <i class="fas fa-book-open mr-2 text-blue-600"></i>
+                        <span class="lang-ru">Источники и литература</span>
+                        <span class="lang-en">References and Literature</span>
+                    </h2>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">
+                            <span class="lang-ru">Научные публикации</span>
+                            <span class="lang-en">Scientific Publications</span>
+                        </h3>
+                        <ol class="list-decimal ml-6 space-y-3">
+                            <li>
+                                Verhoff F.H., Banchero J.T. (1974). "Predicting Dew Points of Gases", Chemical Engineering Progress 70(8), 71-72.
+                            </li>
+                            <li>
+                                Okkes A.G. (1987). "Get Acid Dew Point of Flue Gas", Hydrocarbon Processing, July 1987, 53-55.
+                            </li>
+                            <li>
+                                Kiang Y.H. (1981). "Predicting Dewpoints of Gases", Chemical Engineering 88(3), 127-128.
+                            </li>
+                            <li>
+                                ZareNezhad M. (2009). "A new equation for acid dew-point", Chemical Engineering & Technology 32(4), 585-587.
+                            </li>
+                            <li>
+                                Pierce R.R. (1977). "Estimating Acid Dewpoints in Stack Gases", Chemical Engineering, 84(8), 125-128.
+                            </li>
+                            <li>
+                                Ganapathy V. (1993). "Steam Plant Calculations Manual", 2nd Edition, CRC Press, New York.
+                            </li>
+                        </ol>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">
+                            <span class="lang-ru">Технические источники</span>
+                            <span class="lang-en">Technical Sources</span>
+                        </h3>
+                        <ol class="list-decimal ml-6 space-y-3">
+                            <li>
+                                <span class="lang-ru">HeatMatrix Group B.V. - Технические статьи по низкотемпературной коррозии</span>
+                                <span class="lang-en">HeatMatrix Group B.V. - Technical articles on low-temperature corrosion</span>
+                                <br>
+                                <a href="https://heatmatrixgroup.com/knowledge-center/how-to-calculate-the-acid-dew-point-adp-of-flue-gas/" class="text-blue-600 hover:underline" target="_blank">https://heatmatrixgroup.com/knowledge-center/how-to-calculate-the-acid-dew-point-adp-of-flue-gas/</a>
+                            </li>
+                            <li>
+                                <span class="lang-ru">NIST Chemistry WebBook - Данные давления насыщения H₂S</span>
+                                <span class="lang-en">NIST Chemistry WebBook - H₂S saturation pressure data</span>
+                                <br>
+                                <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C7783064&Units=SI&Mask=4#Thermo-Phase" class="text-blue-600 hover:underline" target="_blank">https://webbook.nist.gov/cgi/cbook.cgi?ID=C7783064</a>
+                            </li>
+                            <li>
+                                <span class="lang-ru">Nippon Steel, каталог S-TEN™ - Описание коррозии при кислотной точке росы</span>
+                                <span class="lang-en">Nippon Steel, S-TEN™ catalog - Description of acid dew point corrosion</span>
+                                <br>
+                                <a href="https://www.nipponsteel.com/product/catalog_download/pdf/A012en.pdf" class="text-blue-600 hover:underline" target="_blank">https://www.nipponsteel.com/product/catalog_download/pdf/A012en.pdf</a>
+                            </li>
+                            <li>
+                                <span class="lang-ru">ECOONEX B.V. - Калькулятор точки росы кислоты</span>
+                                <span class="lang-en">ECOONEX B.V. - Acid Dew Point Calculator</span>
+                                <br>
+                                <a href="https://ecoonex.com/acid-dew-point/" class="text-blue-600 hover:underline" target="_blank">https://ecoonex.com/acid-dew-point/</a>
+                            </li>
+                            <li>
+                                <span class="lang-ru">Envitech, Inc. - Формулы расчета точки росы кислотных газов</span>
+                                <span class="lang-en">Envitech, Inc. - Acid Gas Dewpoint Formulas</span>
+                                <br>
+                                <a href="https://www.envitechinc.com/air-pollution-control-innovations/bid/20805/Acid-Gas-Dewpoint" class="text-blue-600 hover:underline" target="_blank">https://www.envitechinc.com/air-pollution-control-innovations/bid/20805/Acid-Gas-Dewpoint</a>
+                            </li>
+                        </ol>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">
+                            <span class="lang-ru">Стандарты и руководства</span>
+                            <span class="lang-en">Standards and Guidelines</span>
+                        </h3>
+                        <ol class="list-decimal ml-6 space-y-3">
+                            <li>
+                                <span class="lang-ru">EPRI (Electric Power Research Institute) - Руководства по предотвращению холодной коррозии</span>
+                                <span class="lang-en">EPRI (Electric Power Research Institute) - Guidelines for Cold End Corrosion Prevention</span>
+                            </li>
+                            <li>
+                                <span class="lang-ru">API (American Petroleum Institute) - Стандарты по защите от коррозии оборудования нефтепереработки</span>
+                                <span class="lang-en">API (American Petroleum Institute) - Standards for Corrosion Protection of Refinery Equipment</span>
+                            </li>
+                            <li>
+                                <span class="lang-ru">VGB (Verband der Großkessel-Besitzer) - Руководства по эксплуатации котельного оборудования</span>
+                                <span class="lang-en">VGB (Verband der Großkessel-Besitzer) - Guidelines for Boiler Equipment Operation</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-gray-600 text-sm">
+            <p class="lang-ru">Калькулятор точки росы кислотной коррозии. Разработан на основе научных формул и данных.</p>
+            <p class="lang-en">Acid Dew Point Corrosion Calculator. Developed based on scientific formulas and data.</p>
+            <p class="mt-1">© 2023</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+
+        const DewPointHCL = {
+            "title": "Таблица точек росы соляной кислоты для газа типа HCℓ-H₂O",
+            "xAxis": "Влажность в газе (об.%)",
+            "yAxis": "Хлороводород в газе (объемный ppm)",
+            "units": "°C",
+            "data": [
+                {
+                "hcl_ppm": 1,
+                "5": 33,
+                "10": 46,
+                "15": 53,
+                "20": 60,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 10,
+                "5": 33,
+                "10": 46,
+                "15": 53,
+                "20": 60,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 20,
+                "5": 34,
+                "10": 46,
+                "15": 53,
+                "20": 60,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 30,
+                "5": 35,
+                "10": 47,
+                "15": 54,
+                "20": 60,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 40,
+                "5": 36,
+                "10": 47,
+                "15": 55,
+                "20": 60,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 50,
+                "5": 36,
+                "10": 48,
+                "15": 55,
+                "20": 60,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 60,
+                "5": 37,
+                "10": 48,
+                "15": 56,
+                "20": 61,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 70,
+                "5": 37,
+                "10": 49,
+                "15": 56,
+                "20": 61,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 80,
+                "5": 37,
+                "10": 49,
+                "15": 56,
+                "20": 61,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 100,
+                "5": 38,
+                "10": 49,
+                "15": 57,
+                "20": 62,
+                "25": 66,
+                "30": 70,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 200,
+                "5": 39,
+                "10": 51,
+                "15": 58,
+                "20": 63,
+                "25": 68,
+                "30": 71,
+                "35": 74,
+                "40": 77,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 300,
+                "5": 40,
+                "10": 52,
+                "15": 59,
+                "20": 64,
+                "25": 68,
+                "30": 72,
+                "35": 75,
+                "40": 78,
+                "45": 80,
+                "50": 82,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 400,
+                "5": 41,
+                "10": 52,
+                "15": 60,
+                "20": 65,
+                "25": 69,
+                "30": 73,
+                "35": 76,
+                "40": 78,
+                "45": 81,
+                "50": 83,
+                "55": 85,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 500,
+                "5": 42,
+                "10": 53,
+                "15": 60,
+                "20": 65,
+                "25": 70,
+                "30": 73,
+                "35": 76,
+                "40": 79,
+                "45": 81,
+                "50": 83,
+                "55": 85,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 600,
+                "5": 42,
+                "10": 53,
+                "15": 61,
+                "20": 66,
+                "25": 70,
+                "30": 73,
+                "35": 76,
+                "40": 79,
+                "45": 81,
+                "50": 84,
+                "55": 86,
+                "60": 87
+                },
+                {
+                "hcl_ppm": 700,
+                "5": 42,
+                "10": 54,
+                "15": 61,
+                "20": 66,
+                "25": 70,
+                "30": 74,
+                "35": 77,
+                "40": 79,
+                "45": 82,
+                "50": 84,
+                "55": 86,
+                "60": 88
+                },
+                {
+                "hcl_ppm": 800,
+                "5": 43,
+                "10": 54,
+                "15": 61,
+                "20": 66,
+                "25": 71,
+                "30": 74,
+                "35": 77,
+                "40": 80,
+                "45": 82,
+                "50": 84,
+                "55": 86,
+                "60": 88
+                },
+                {
+                "hcl_ppm": 900,
+                "5": 43,
+                "10": 54,
+                "15": 61,
+                "20": 67,
+                "25": 71,
+                "30": 74,
+                "35": 77,
+                "40": 80,
+                "45": 82,
+                "50": 84,
+                "55": 86,
+                "60": 88
+                },
+                {
+                "hcl_ppm": 1000,
+                "5": 43,
+                "10": 55,
+                "15": 62,
+                "20": 67,
+                "25": 71,
+                "30": 75,
+                "35": 78,
+                "40": 80,
+                "45": 83,
+                "50": 85,
+                "55": 87,
+                "60": 88
+                },
+                {
+                "hcl_ppm": 2000,
+                "5": 45,
+                "10": 56,
+                "15": 63,
+                "20": 68,
+                "25": 73,
+                "30": 76,
+                "35": 79,
+                "40": 82,
+                "45": 84,
+                "50": 86,
+                "55": 88,
+                "60": 90
+                },
+                {
+                "hcl_ppm": 3000,
+                "5": 46,
+                "10": 57,
+                "15": 64,
+                "20": 69,
+                "25": 73,
+                "30": 77,
+                "35": 80,
+                "40": 83,
+                "45": 85,
+                "50": 87,
+                "55": 89,
+                "60": 91
+                },
+                {
+                "hcl_ppm": 4000,
+                "5": 46,
+                "10": 58,
+                "15": 65,
+                "20": 70,
+                "25": 74,
+                "30": 78,
+                "35": 81,
+                "40": 83,
+                "45": 86,
+                "50": 88,
+                "55": 90,
+                "60": 91
+                },
+                {
+                "hcl_ppm": 5000,
+                "5": 47,
+                "10": 58,
+                "15": 65,
+                "20": 70,
+                "25": 75,
+                "30": 78,
+                "35": 81,
+                "40": 84,
+                "45": 86,
+                "50": 88,
+                "55": 90,
+                "60": 92
+                },
+                {
+                "hcl_ppm": 10000,
+                "5": 48,
+                "10": 60,
+                "15": 67,
+                "20": 72,
+                "25": 76,
+                "30": 80,
+                "35": 83,
+                "40": 85,
+                "45": 88,
+                "50": 90,
+                "55": 92,
+                "60": 93
+                }
+            ]
+            }
+        const DewPointSourGas = {
+            "title": "Таблица точек росы серной кислоты для газа типа SO₃-H₂O",
+            "xAxis": "Влажность в газе (об.%)",
+            "yAxis": "SO₃ в газе (объемный ppm)",
+            "units": "°C",
+            "data": [
+                {
+                "so3_ppm": 0.0,
+                "5": 33,
+                "10": 46,
+                "15": 53,
+                "20": 60,
+                "25": 66,
+                "30": 69,
+                "35": 74,
+                "40": 76,
+                "45": 79,
+                "50": 81,
+                "55": 84,
+                "60": 87
+                },
+                {
+                "so3_ppm": 0.1,
+                "5": 87,
+                "10": 95,
+                "15": 100,
+                "20": 103,
+                "25": 106,
+                "30": 108,
+                "35": 111,
+                "40": 112,
+                "45": 114,
+                "50": 115,
+                "55": 117,
+                "60": 118
+                },
+                {
+                "so3_ppm": 1,
+                "5": 106,
+                "10": 114,
+                "15": 119,
+                "20": 122,
+                "25": 125,
+                "30": 127,
+                "35": 129,
+                "40": 130,
+                "45": 132,
+                "50": 133,
+                "55": 134,
+                "60": 135
+                },
+                {
+                "so3_ppm": 2,
+                "5": 113,
+                "10": 120,
+                "15": 125,
+                "20": 128,
+                "25": 131,
+                "30": 133,
+                "35": 134,
+                "40": 136,
+                "45": 137,
+                "50": 139,
+                "55": 140,
+                "60": 141
+                },
+                {
+                "so3_ppm": 3,
+                "5": 117,
+                "10": 124,
+                "15": 128,
+                "20": 132,
+                "25": 134,
+                "30": 136,
+                "35": 138,
+                "40": 139,
+                "45": 141,
+                "50": 142,
+                "55": 143,
+                "60": 144
+                },
+                {
+                "so3_ppm": 4,
+                "5": 119,
+                "10": 127,
+                "15": 131,
+                "20": 134,
+                "25": 137,
+                "30": 139,
+                "35": 140,
+                "40": 142,
+                "45": 143,
+                "50": 145,
+                "55": 146,
+                "60": 147
+                },
+                {
+                "so3_ppm": 5,
+                "5": 122,
+                "10": 129,
+                "15": 133,
+                "20": 136,
+                "25": 139,
+                "30": 141,
+                "35": 142,
+                "40": 144,
+                "45": 145,
+                "50": 146,
+                "55": 148,
+                "60": 149
+                },
+                {
+                "so3_ppm": 6,
+                "5": 123,
+                "10": 131,
+                "15": 135,
+                "20": 138,
+                "25": 140,
+                "30": 142,
+                "35": 144,
+                "40": 146,
+                "45": 147,
+                "50": 148,
+                "55": 149,
+                "60": 150
+                },
+                {
+                "so3_ppm": 7,
+                "5": 125,
+                "10": 132,
+                "15": 136,
+                "20": 139,
+                "25": 142,
+                "30": 144,
+                "35": 145,
+                "40": 147,
+                "45": 148,
+                "50": 149,
+                "55": 150,
+                "60": 151
+                },
+                {
+                "so3_ppm": 8,
+                "5": 126,
+                "10": 133,
+                "15": 138,
+                "20": 141,
+                "25": 143,
+                "30": 145,
+                "35": 147,
+                "40": 148,
+                "45": 149,
+                "50": 151,
+                "55": 152,
+                "60": 153
+                },
+                {
+                "so3_ppm": 9,
+                "5": 127,
+                "10": 134,
+                "15": 139,
+                "20": 142,
+                "25": 144,
+                "30": 146,
+                "35": 148,
+                "40": 149,
+                "45": 150,
+                "50": 152,
+                "55": 153,
+                "60": 154
+                },
+                {
+                "so3_ppm": 10,
+                "5": 129,
+                "10": 135,
+                "15": 140,
+                "20": 143,
+                "25": 145,
+                "30": 147,
+                "35": 149,
+                "40": 150,
+                "45": 151,
+                "50": 153,
+                "55": 154,
+                "60": 155
+                },
+                {
+                "so3_ppm": 20,
+                "5": 136,
+                "10": 142,
+                "15": 146,
+                "20": 149,
+                "25": 152,
+                "30": 153,
+                "35": 155,
+                "40": 156,
+                "45": 158,
+                "50": 159,
+                "55": 160,
+                "60": 161
+                },
+                {
+                "so3_ppm": 30,
+                "5": 140,
+                "10": 147,
+                "15": 150,
+                "20": 153,
+                "25": 155,
+                "30": 157,
+                "35": 159,
+                "40": 160,
+                "45": 161,
+                "50": 162,
+                "55": 163,
+                "60": 164
+                },
+                {
+                "so3_ppm": 40,
+                "5": 143,
+                "10": 150,
+                "15": 153,
+                "20": 156,
+                "25": 158,
+                "30": 160,
+                "35": 162,
+                "40": 163,
+                "45": 164,
+                "50": 165,
+                "55": 166,
+                "60": 167
+                },
+                {
+                "so3_ppm": 50,
+                "5": 146,
+                "10": 152,
+                "15": 156,
+                "20": 158,
+                "25": 161,
+                "30": 162,
+                "35": 164,
+                "40": 165,
+                "45": 166,
+                "50": 167,
+                "55": 168,
+                "60": 169
+                },
+                {
+                "so3_ppm": 60,
+                "5": 148,
+                "10": 154,
+                "15": 158,
+                "20": 160,
+                "25": 162,
+                "30": 164,
+                "35": 166,
+                "40": 167,
+                "45": 168,
+                "50": 169,
+                "55": 170,
+                "60": 171
+                },
+                {
+                "so3_ppm": 70,
+                "5": 149,
+                "10": 156,
+                "15": 159,
+                "20": 162,
+                "25": 164,
+                "30": 166,
+                "35": 167,
+                "40": 168,
+                "45": 169,
+                "50": 171,
+                "55": 171,
+                "60": 172
+                },
+                {
+                "so3_ppm": 80,
+                "5": 151,
+                "10": 157,
+                "15": 161,
+                "20": 163,
+                "25": 165,
+                "30": 167,
+                "35": 168,
+                "40": 170,
+                "45": 171,
+                "50": 172,
+                "55": 173,
+                "60": 174
+                },
+                {
+                "so3_ppm": 90,
+                "5": 152,
+                "10": 158,
+                "15": 162,
+                "20": 164,
+                "25": 167,
+                "30": 168,
+                "35": 170,
+                "40": 171,
+                "45": 172,
+                "50": 173,
+                "55": 174,
+                "60": 175
+                },
+                {
+                "so3_ppm": 100,
+                "5": 154,
+                "10": 159,
+                "15": 163,
+                "20": 166,
+                "25": 168,
+                "30": 169,
+                "35": 171,
+                "40": 172,
+                "45": 173,
+                "50": 174,
+                "55": 175,
+                "60": 176
+                },
+                {
+                "so3_ppm": 200,
+                "5": 162,
+                "10": 167,
+                "15": 171,
+                "20": 173,
+                "25": 175,
+                "30": 176,
+                "35": 178,
+                "40": 179,
+                "45": 180,
+                "50": 181,
+                "55": 182,
+                "60": 182
+                },
+                {
+                "so3_ppm": 300,
+                "5": 167,
+                "10": 172,
+                "15": 175,
+                "20": 177,
+                "25": 179,
+                "30": 181,
+                "35": 182,
+                "40": 183,
+                "45": 184,
+                "50": 185,
+                "55": 186,
+                "60": 187
+                },
+                {
+                "so3_ppm": 400,
+                "5": 170,
+                "10": 175,
+                "15": 178,
+                "20": 181,
+                "25": 182,
+                "30": 184,
+                "35": 185,
+                "40": 186,
+                "45": 187,
+                "50": 188,
+                "55": 189,
+                "60": 189
+                },
+                {
+                "so3_ppm": 500,
+                "5": 173,
+                "10": 178,
+                "15": 181,
+                "20": 183,
+                "25": 185,
+                "30": 186,
+                "35": 188,
+                "40": 189,
+                "45": 189,
+                "50": 190,
+                "55": 191,
+                "60": 192
+                }
+            ]
+            }
+        const CorrosionHCL = {
+            "title": "Отношение между концентрацией соляной кислоты и скоростью коррозии",
+            "steelTypes": ["Mild Steel", "SUS 304", "SUS 316L"],
+            "temperatures": [40, 80],
+            "testDuration": "6 hrs",
+            "xAxis": "Концентрация HCl (%)",
+            "yAxis": "Скорость коррозии (мг/см²/час)",
+            "data": [
+                {
+                "steelType": "Mild Steel",
+                "datasets": [
+                    {
+                    "temperature": 40,
+                    "points": [
+                        { "concentration": 3, "corrosionRate": 1.0 },
+                        { "concentration": 10, "corrosionRate": 2.2 },
+                        { "concentration": 20, "corrosionRate": 3.9 }
+                    ]
+                    },
+                    {
+                    "temperature": 80,
+                    "points": [
+                        { "concentration": 3, "corrosionRate": 20 },
+                        { "concentration": 10, "corrosionRate": 34 },
+                        { "concentration": 20, "corrosionRate": 51 }
+                    ]
+                    }
+                ]
+                },
+                {
+                "steelType": "SUS 304",
+                "datasets": [
+                    {
+                    "temperature": 40,
+                    "points": [
+                        { "concentration": 3, "corrosionRate": 0.1 },
+                        { "concentration": 10, "corrosionRate": 0.24 },
+                        { "concentration": 20, "corrosionRate": 0.35 }
+                    ]
+                    },
+                    {
+                    "temperature": 80,
+                    "points": [
+                        { "concentration": 3, "corrosionRate": 1.0 },
+                        { "concentration": 10, "corrosionRate": 4.0 },
+                        { "concentration": 20, "corrosionRate": 17.0 }
+                    ]
+                    }
+                ]
+                },
+                {
+                "steelType": "SUS 316L",
+                "datasets": [
+                    {
+                    "temperature": 40,
+                    "points": [
+                        { "concentration": 3, "corrosionRate": 0.01 },
+                        { "concentration": 10, "corrosionRate": 0.2 },
+                        { "concentration": 20, "corrosionRate": 0.55 }
+                    ]
+                    },
+                    {
+                    "temperature": 80,
+                    "points": [
+                        { "concentration": 3, "corrosionRate": 1.0 },
+                        { "concentration": 10, "corrosionRate": 4.5 },
+                        { "concentration": 20, "corrosionRate": 14.0 }
+                    ]
+                    }
+                ]
+                }
+            ]
+            }
+        
+            // Global variables
+        let currentAcid = 'h2so4';
+        let currentMethod = 'okkes';
+        let currentGraphType = 'h2o';
+        let dewPointChart = null;
+        let currentLanguage = 'ru';
+        
+        // Unit conversion functions
+        function convertToMMHG(value, unit, pressure) {
+            // Convert to mmHg
+            if (unit === 'percent') {
+                return (value / 100) * pressure * 760; // % to mmHg
+            } else if (unit === 'ppm') {
+                return (value / 1000000) * pressure * 760; // ppm to mmHg
+            } else if (unit === 'mg/nm3') {
+                // Convert mg/nm3 to ppm then to mmHg
+                let ppm;
+                if (currentAcid === 'h2so4' || currentAcid === 'so3') {
+                    // SO3 molecular weight: 80.06 g/mol
+                    ppm = (value * 22.4) / 80.06;
+                } else if (currentAcid === 'hcl') {
+                    // HCl molecular weight: 36.46 g/mol
+                    ppm = (value * 22.4) / 36.46;
+                } else if (currentAcid === 'h2s') {
+                    // H2S molecular weight: 34.08 g/mol
+                    ppm = (value * 22.4) / 34.08;
+                } else if (currentAcid === 'h2o') {
+                    // H2O molecular weight: 18.02 g/mol
+                    ppm = (value * 22.4) / 18.02;
+                }
+                return (ppm / 1000000) * pressure * 760; // ppm to mmHg
+            }
+            return value;
+        }
+        
+        function convertToVolumeFraction(value, unit, pressure) {
+            // Convert to volume fraction (dimensionless)
+            if (unit === 'percent') {
+                return value / 100; // % to fraction
+            } else if (unit === 'ppm') {
+                return value / 1000000; // ppm to fraction
+            } else if (unit === 'mg/nm3') {
+                // Convert mg/nm3 to ppm then to fraction
+                let ppm;
+                if (currentAcid === 'h2so4' || currentAcid === 'so3') {
+                    // SO3 molecular weight: 80.06 g/mol
+                    ppm = (value * 22.4) / 80.06;
+                } else if (currentAcid === 'hcl') {
+                    // HCl molecular weight: 36.46 g/mol
+                    ppm = (value * 22.4) / 36.46;
+                } else if (currentAcid === 'h2s') {
+                    // H2S molecular weight: 34.08 g/mol
+                    ppm = (value * 22.4) / 34.08;
+                } else if (currentAcid === 'h2o') {
+                    // H2O molecular weight: 18.02 g/mol
+                    ppm = (value * 22.4) / 18.02;
+                }
+                return ppm / 1000000; // ppm to fraction
+            }
+            return value;
+        }
+        
+        function convertPressure(value, unit) {
+            // Convert to atm
+            if (unit === 'atm') {
+                return value;
+            } else if (unit === 'bar') {
+                return value * 0.986923; // bar to atm
+            } else if (unit === 'kPa') {
+                return value * 0.00986923; // kPa to atm
+            } else if (unit === 'mmHg') {
+                return value / 760; // mmHg to atm
+            }
+            return value;
+        }
+        
+        function celsiusToFahrenheit(celsius) {
+            return (celsius * 9/5) + 32;
+        }
+        
+        function fahrenheitToCelsius(fahrenheit) {
+            return (fahrenheit - 32) * 5/9;
+        }
+        
+        // Calculation functions
+        function calculateH2SO4DewPoint(method, pH2O, pSO3, pressureAtm) {
+            let dewPointC = 0;
+            
+            // Calculate dew point using specified method
+            if (method === 'verhoff') {
+                // Verhoff method (inputs in mmHg)
+                // 1000/T = 2.276 - 0.02943·ln(pH₂O) - 0.0858·ln(pSO₃) + 0.0062·ln(pH₂O)·ln(pSO₃)
+                
+                // Make sure pH2O and pSO3 are in mmHg
+                if (pH2O <= 0) pH2O = 0.001; // Prevent log of zero
+                if (pSO3 <= 0) pSO3 = 0.001; // Prevent log of zero
+                
+                const lnH2O = Math.log(pH2O);
+                const lnSO3 = Math.log(pSO3);
+                
+                const dewPointK = 1000 / (2.276 - 0.02943 * lnH2O - 0.0858 * lnSO3 + 0.0062 * lnH2O * lnSO3);
+                dewPointC = dewPointK - 273.15;
+            } 
+            else if (method === 'okkes') {
+                // Okkes method (inputs are volume fractions)
+                // T(°C) = 203.25 + 27.6·log₁₀(pH₂O) + 10.83·log₁₀(pSO₃) + 1.06·[log₁₀(pSO₃) + 8]²·¹⁹
+                
+                // Make sure pH2O and pSO3 are positive
+                if (pH2O <= 0) pH2O = 0.000001; // Prevent log of zero
+                if (pSO3 <= 0) pSO3 = 0.000001; // Prevent log of zero
+                
+                dewPointC = 203.25 + 
+                    27.6 * Math.log10(pH2O) + 
+                    10.83 * Math.log10(pSO3) + 
+                    1.06 * Math.pow(Math.log10(pSO3) + 8, 2);
+            } 
+            else if (method === 'zarenezhad') {
+                // ZareNezhad method (inputs in mmHg)
+                // T(°C) = 150 + 8.1328·ln(pH₂O) + 11.664·ln(pSO₃) - 0.38226·ln(pH₂O)·ln(pSO₃)
+                
+                // Make sure pH2O and pSO3 are positive
+                if (pH2O <= 0) pH2O = 0.001; // Prevent log of zero
+                if (pSO3 <= 0) pSO3 = 0.001; // Prevent log of zero
+                
+                const lnH2O = Math.log(pH2O);
+                const lnSO3 = Math.log(pSO3);
+                
+                dewPointC = 150 + 
+                    8.1328 * lnH2O + 
+                    11.664 * lnSO3 - 
+                    0.38226 * lnH2O * lnSO3;
+            }
+            
+            return Math.max(0, dewPointC); // Ensure not negative
+        }
+        
+        function calculateHClDewPoint(pH2O, pHCl, pressureAtm) {
+            // Kiang method for HCl dew point (inputs in mmHg)
+            // 1000/T = 3.7368 - 0.1591·ln(pH₂O) - 0.0326·ln(pHCl) + 0.00269·ln(pH₂O)·ln(pHCl)
+            
+            // Make sure pH2O and pHCl are positive
+            if (pH2O <= 0) pH2O = 0.001; // Prevent log of zero
+            if (pHCl <= 0) pHCl = 0.001; // Prevent log of zero
+            
+            const lnH2O = Math.log(pH2O);
+            const lnHCl = Math.log(pHCl);
+            
+            const dewPointK = 1000 / (3.7368 - 0.1591 * lnH2O - 0.0326 * lnHCl + 0.00269 * lnH2O * lnHCl);
+            const dewPointC = dewPointK - 273.15;
+            
+            return Math.max(0, dewPointC); // Ensure not negative
+        }
+        
+        function calculateH2SDewPoint(pH2S, pressureAtm) {
+            // Antoine equation for H2S (NIST data)
+            // For temperature range 212.8–349.5 K (from -60.3 °C to +76.4 °C)
+            // log₁₀P(bar) = 4.52887 - 958.587/(T(K) - 0.539)
+            
+            // Convert mmHg to bar
+            const pH2SBar = pH2S / 750.06;
+            
+            if (pH2SBar <= 0) return -100; // Very low pressure, very low dew point
+            
+            // Solve for T(K)
+            // log₁₀(pH2SBar) = 4.52887 - 958.587/(T - 0.539)
+            // 958.587/(T - 0.539) = 4.52887 - log₁₀(pH2SBar)
+            // T - 0.539 = 958.587/(4.52887 - log₁₀(pH2SBar))
+            // T = 958.587/(4.52887 - log₁₀(pH2SBar)) + 0.539
+            
+            const log10pH2SBar = Math.log10(pH2SBar);
+            
+            if (log10pH2SBar >= 4.52887) {
+                return 76.4; // Maximum temperature in range
+            }
+            
+            const dewPointK = 958.587 / (4.52887 - log10pH2SBar) + 0.539;
+            const dewPointC = dewPointK - 273.15;
+            
+            // Check if result is within valid range
+            if (dewPointC < -60.3 || dewPointC > 76.4) {
+                // Use the lower range equation for temperatures below -60.3 °C
+                // log₁₀P(bar) = 4.43681 - 829.439/(T(K) - 25.412)
+                const dewPointK2 = 829.439 / (4.43681 - log10pH2SBar) + 25.412;
+                const dewPointC2 = dewPointK2 - 273.15;
+                
+                return Math.max(-150, dewPointC2); // Practical lower limit
+            }
+            
+            return Math.max(-150, dewPointC); // Practical lower limit
+        }
+        
+        function calculateWaterDewPoint(pH2O, pressureAtm) {
+            // Simple water dew point calculation
+            // Based on Magnus formula: Tdp = b * v / (a - v) where v = a * T / (b + T) + ln(RH/100)
+            // Here we directly calculate from partial pressure
+            
+            // Convert mmHg to relative humidity with respect to 1 atm
+            const pH2OAtm = pH2O / 760;
+            const relHumidity = pH2OAtm / (0.0000205 * Math.exp(0.0631846 * 25)); // at 25°C reference
+            
+            const a = 17.27;
+            const b = 237.7;
+            
+            // Approximation valid for 0 < T < 60 °C and 1% < RH < 100%
+            const v = Math.log(relHumidity / 100) + (a * 25) / (b + 25);
+            const dewPointC = b * v / (a - v);
+            
+            return Math.max(0, dewPointC); // Ensure not negative
+        }
+        
+        // Function to perform all calculations
+        function performCalculations() {
+            // Get input values
+            const waterContent = parseFloat(document.getElementById('water-content').value);
+            const waterUnit = document.getElementById('water-units').value;
+            const systemPressure = parseFloat(document.getElementById('system-pressure').value);
+            const pressureUnit = document.getElementById('pressure-units').value;
+            
+            // Convert pressure to atm
+            const pressureAtm = convertPressure(systemPressure, pressureUnit);
+            
+            // Calculate H2O partial pressure in mmHg
+            const pH2OmmHg = convertToMMHG(waterContent, waterUnit, pressureAtm);
+            
+            // Calculate H2O volume fraction
+            const pH2OFraction = convertToVolumeFraction(waterContent, waterUnit, pressureAtm);
+            
+            // Display intermediate values
+            document.getElementById('h2o-partial-pressure').textContent = pH2OmmHg.toFixed(4) + ' мм рт.ст.';
+            
+            // Calculate water dew point
+            const waterDewPointC = calculateWaterDewPoint(pH2OmmHg, pressureAtm);
+            const waterDewPointF = celsiusToFahrenheit(waterDewPointC);
+            
+            document.getElementById('water-dew-point').textContent = waterDewPointC.toFixed(1);
+            document.getElementById('water-dew-point-f').textContent = `(${waterDewPointF.toFixed(1)} °F)`;
+            
+            if (currentAcid === 'h2so4') {
+                // Get SO3 input values
+                const so3Content = parseFloat(document.getElementById('so3-content').value);
+                const so3Unit = document.getElementById('so3-units').value;
+                
+                // Calculate SO3 partial pressure in mmHg
+                const pSO3mmHg = convertToMMHG(so3Content, so3Unit, pressureAtm);
+                
+                // Calculate SO3 volume fraction
+                const pSO3Fraction = convertToVolumeFraction(so3Content, so3Unit, pressureAtm);
+                
+                // Display intermediate SO3 values
+                document.getElementById('so3-partial-pressure').textContent = pSO3mmHg.toFixed(4) + ' мм рт.ст.';
+                
+                if (currentMethod === 'all') {
+                    // Calculate dew points using all methods
+                    const okkesDewPoint = calculateH2SO4DewPoint('okkes', pH2OFraction, pSO3Fraction, pressureAtm);
+                    const verhoffDewPoint = calculateH2SO4DewPoint('verhoff', pH2OmmHg, pSO3mmHg, pressureAtm);
+                    const zareDewPoint = calculateH2SO4DewPoint('zarenezhad', pH2OmmHg, pSO3mmHg, pressureAtm);
+                    
+                    // Find maximum dew point
+                    const maxDewPoint = Math.max(okkesDewPoint, verhoffDewPoint, zareDewPoint);
+                    const recommendedTemp = maxDewPoint + 10;
+                    
+                    // Update comparison table
+                    document.getElementById('okkes-result').textContent = okkesDewPoint.toFixed(1) + ' °C';
+                    document.getElementById('verhoff-result').textContent = verhoffDewPoint.toFixed(1) + ' °C';
+                    document.getElementById('zarenezhad-result').textContent = zareDewPoint.toFixed(1) + ' °C';
+                    document.getElementById('max-result').textContent = maxDewPoint.toFixed(1) + ' °C';
+                    document.getElementById('recommended-result').textContent = recommendedTemp.toFixed(1) + ' °C';
+                    
+                    // Update Fahrenheit values
+                    document.getElementById('okkes-result-f').textContent = celsiusToFahrenheit(okkesDewPoint).toFixed(1) + ' °F';
+                    document.getElementById('verhoff-result-f').textContent = celsiusToFahrenheit(verhoffDewPoint).toFixed(1) + ' °F';
+                    document.getElementById('zarenezhad-result-f').textContent = celsiusToFahrenheit(zareDewPoint).toFixed(1) + ' °F';
+                    document.getElementById('max-result-f').textContent = celsiusToFahrenheit(maxDewPoint).toFixed(1) + ' °F';
+                    document.getElementById('recommended-result-f').textContent = celsiusToFahrenheit(recommendedTemp).toFixed(1) + ' °F';
+                    
+                    // Show comparison table, hide single result
+                    document.getElementById('single-method-results').style.display = 'none';
+                    document.getElementById('comparison-results').style.display = 'block';
+                    
+                    // Update main result
+                    document.getElementById('h2so4-dew-point').textContent = maxDewPoint.toFixed(1);
+                    document.getElementById('h2so4-dew-point-f').textContent = `(${celsiusToFahrenheit(maxDewPoint).toFixed(1)} °F)`;
+                    document.getElementById('recommended-temp').textContent = recommendedTemp.toFixed(1);
+                    document.getElementById('recommended-temp-f').textContent = `(${celsiusToFahrenheit(recommendedTemp).toFixed(1)} °F)`;
+                } else {
+                    // Calculate dew point using selected method
+                    let dewPointC = 0;
+                    
+                    if (currentMethod === 'okkes') {
+                        dewPointC = calculateH2SO4DewPoint('okkes', pH2OFraction, pSO3Fraction, pressureAtm);
+                    } else if (currentMethod === 'verhoff') {
+                        dewPointC = calculateH2SO4DewPoint('verhoff', pH2OmmHg, pSO3mmHg, pressureAtm);
+                    } else if (currentMethod === 'zarenezhad') {
+                        dewPointC = calculateH2SO4DewPoint('zarenezhad', pH2OmmHg, pSO3mmHg, pressureAtm);
+                    }
+                    
+                    const dewPointF = celsiusToFahrenheit(dewPointC);
+                    const recommendedTemp = dewPointC + 10;
+                    const recommendedTempF = celsiusToFahrenheit(recommendedTemp);
+                    
+                    // Show single result, hide comparison table
+                    document.getElementById('single-method-results').style.display = 'flex';
+                    document.getElementById('comparison-results').style.display = 'none';
+                    
+                    // Update results
+                    document.getElementById('h2so4-dew-point').textContent = dewPointC.toFixed(1);
+                    document.getElementById('h2so4-dew-point-f').textContent = `(${dewPointF.toFixed(1)} °F)`;
+                    document.getElementById('recommended-temp').textContent = recommendedTemp.toFixed(1);
+                    document.getElementById('recommended-temp-f').textContent = `(${recommendedTempF.toFixed(1)} °F)`;
+                }
+                
+                // Update risk assessment
+                updateRiskAssessment('h2so4');
+            } 
+            else if (currentAcid === 'hcl') {
+                // Get HCl input values
+                const hclContent = parseFloat(document.getElementById('hcl-content').value);
+                const hclUnit = document.getElementById('hcl-units').value;
+                
+                // Calculate HCl partial pressure in mmHg
+                const pHClmmHg = convertToMMHG(hclContent, hclUnit, pressureAtm);
+                
+                // Display intermediate HCl values
+                document.getElementById('hcl-partial-pressure').textContent = pHClmmHg.toFixed(4) + ' мм рт.ст.';
+                
+                // Calculate HCl dew point
+                const hclDewPointC = calculateHClDewPoint(pH2OmmHg, pHClmmHg, pressureAtm);
+                const hclDewPointF = celsiusToFahrenheit(hclDewPointC);
+                const recommendedTemp = hclDewPointC + 10;
+                const recommendedTempF = celsiusToFahrenheit(recommendedTemp);
+                
+                // Show single result, hide comparison table
+                document.getElementById('single-method-results').style.display = 'flex';
+                document.getElementById('comparison-results').style.display = 'none';
+                
+                // Update results
+                document.getElementById('h2so4-dew-point').textContent = hclDewPointC.toFixed(1);
+                document.getElementById('h2so4-dew-point-f').textContent = `(${hclDewPointF.toFixed(1)} °F)`;
+                document.getElementById('recommended-temp').textContent = recommendedTemp.toFixed(1);
+                document.getElementById('recommended-temp-f').textContent = `(${recommendedTempF.toFixed(1)} °F)`;
+                
+                // Update risk assessment
+                updateRiskAssessment('hcl');
+            } 
+            else if (currentAcid === 'h2s') {
+                // Get H2S input values
+                const h2sContent = parseFloat(document.getElementById('h2s-content').value);
+                const h2sUnit = document.getElementById('h2s-units').value;
+                
+                // Calculate H2S partial pressure in mmHg
+                const pH2SmmHg = convertToMMHG(h2sContent, h2sUnit, pressureAtm);
+                
+                // Display intermediate H2S values
+                document.getElementById('h2s-partial-pressure').textContent = pH2SmmHg.toFixed(4) + ' мм рт.ст.';
+                
+                // Calculate H2S dew point
+                const h2sDewPointC = calculateH2SDewPoint(pH2SmmHg, pressureAtm);
+                const h2sDewPointF = celsiusToFahrenheit(h2sDewPointC);
+                
+                // For H2S, the recommended temperature is above water dew point
+                // since H2S corrosion is mainly an issue when water condenses
+                const recommendedTemp = Math.max(h2sDewPointC, waterDewPointC) + 10;
+                const recommendedTempF = celsiusToFahrenheit(recommendedTemp);
+                
+                // Show single result, hide comparison table
+                document.getElementById('single-method-results').style.display = 'flex';
+                document.getElementById('comparison-results').style.display = 'none';
+                
+                // Update results
+                document.getElementById('h2so4-dew-point').textContent = h2sDewPointC.toFixed(1);
+                document.getElementById('h2so4-dew-point-f').textContent = `(${h2sDewPointF.toFixed(1)} °F)`;
+                document.getElementById('recommended-temp').textContent = recommendedTemp.toFixed(1);
+                document.getElementById('recommended-temp-f').textContent = `(${recommendedTempF.toFixed(1)} °F)`;
+                
+                // Update risk assessment
+                updateRiskAssessment('h2s');
+            }
+            
+            // Update graph
+            updateGraph();
+        }
+        
+        function updateRiskAssessment(acidType) {
+            const riskAssessment = document.getElementById('risk-assessment');
+            const riskDescription = document.getElementById('risk-description');
+            
+            if (acidType === 'h2so4') {
+                riskAssessment.className = "mt-6 p-4 rounded-lg bg-blue-50";
+                
+                if (currentLanguage === 'ru') {
+                    riskDescription.innerHTML = "При работе оборудования на температурах ниже точки росы серной кислоты (H₂SO₄) существует высокий риск коррозии углеродистых и низколегированных сталей. Скорость коррозии максимальна при температурах на 20-40°C ниже точки росы.";
+                } else {
+                    riskDescription.innerHTML = "Operating equipment at temperatures below the sulfuric acid (H₂SO₄) dew point poses a high risk of corrosion for carbon and low-alloy steels. Corrosion rate is highest at temperatures 20-40°C below the dew point.";
+                }
+            } 
+            else if (acidType === 'hcl') {
+                riskAssessment.className = "mt-6 p-4 rounded-lg bg-green-50";
+                
+                if (currentLanguage === 'ru') {
+                    riskDescription.innerHTML = "Коррозия от соляной кислоты (HCl) представляет опасность для многих материалов, включая нержавеющие стали 300-й серии. HCl-конденсация обычно происходит при температурах около 50-70°C.";
+                } else {
+                    riskDescription.innerHTML = "Hydrochloric acid (HCl) corrosion poses a danger to many materials, including 300-series stainless steels. HCl condensation typically occurs at temperatures around 50-70°C.";
+                }
+            } 
+            else if (acidType === 'h2s') {
+                riskAssessment.className = "mt-6 p-4 rounded-lg bg-purple-50";
+                
+                if (currentLanguage === 'ru') {
+                    riskDescription.innerHTML = "Для потоков с H₂S критичной обычно является точка росы воды, так как влажный H₂S вызывает сульфидное растрескивание под напряжением (SSC). Чистый H₂S без воды конденсируется только при очень низких температурах.";
+                } else {
+                    riskDescription.innerHTML = "For streams containing H₂S, the water dew point is typically critical, as wet H₂S causes sulfide stress cracking (SSC). Pure H₂S without water condenses only at very low temperatures.";
+                }
+            }
+        }
+        
+        // Function to update the graph
+        function updateGraph() {
+            // Get input values
+            const waterContent = parseFloat(document.getElementById('water-content').value);
+            const waterUnit = document.getElementById('water-units').value;
+            const systemPressure = parseFloat(document.getElementById('system-pressure').value);
+            const pressureUnit = document.getElementById('pressure-units').value;
+            const pressureAtm = convertPressure(systemPressure, pressureUnit);
+            
+            let acidContent = 0;
+            let acidUnit = '';
+            
+            if (currentAcid === 'h2so4') {
+                acidContent = parseFloat(document.getElementById('so3-content').value);
+                acidUnit = document.getElementById('so3-units').value;
+            } else if (currentAcid === 'hcl') {
+                acidContent = parseFloat(document.getElementById('hcl-content').value);
+                acidUnit = document.getElementById('hcl-units').value;
+            } else if (currentAcid === 'h2s') {
+                acidContent = parseFloat(document.getElementById('h2s-content').value);
+                acidUnit = document.getElementById('h2s-units').value;
+            }
+            
+            // Prepare data for graphs
+            let xValues = [];
+            let yValuesMethod1 = [];
+            let yValuesMethod2 = [];
+            let yValuesMethod3 = [];
+            let yValuesWater = [];
+            
+            let graphTitle = '';
+            let xAxisLabel = '';
+            let yAxisLabel = '';
+            
+            // Determine what to plot based on graph type
+            if (currentGraphType === 'h2o') {
+                // Vary water content, keep acid content constant
+                if (currentLanguage === 'ru') {
+                    graphTitle = 'Зависимость точки росы от содержания H₂O';
+                    xAxisLabel = 'Содержание H₂O (% об.)';
+                    yAxisLabel = 'Точка росы (°C)';
+                    document.getElementById('graph-description').innerHTML = 'График показывает зависимость точки росы от содержания воды (H₂O) при фиксированных значениях других параметров.';
+                } else {
+                    graphTitle = 'Dew Point vs H₂O Content';
+                    xAxisLabel = 'H₂O Content (% vol.)';
+                    yAxisLabel = 'Dew Point (°C)';
+                    document.getElementById('graph-description').innerHTML = 'The graph shows the dependence of dew point on water content (H₂O) while other parameters remain fixed.';
+                }
+                
+                for (let h2oPercent = 1; h2oPercent <= 30; h2oPercent += 1) {
+                    xValues.push(h2oPercent);
+                    
+                    const pH2OmmHg = convertToMMHG(h2oPercent, 'percent', pressureAtm);
+                    const pH2OFraction = convertToVolumeFraction(h2oPercent, 'percent', pressureAtm);
+                    
+                    // Calculate water dew point
+                    const waterDewPointC = calculateWaterDewPoint(pH2OmmHg, pressureAtm);
+                    yValuesWater.push(waterDewPointC);
+                    
+                    if (currentAcid === 'h2so4') {
+                        const pSO3mmHg = convertToMMHG(acidContent, acidUnit, pressureAtm);
+                        const pSO3Fraction = convertToVolumeFraction(acidContent, acidUnit, pressureAtm);
+                        
+                        // Calculate using different methods
+                        const okkesDewPoint = calculateH2SO4DewPoint('okkes', pH2OFraction, pSO3Fraction, pressureAtm);
+                        const verhoffDewPoint = calculateH2SO4DewPoint('verhoff', pH2OmmHg, pSO3mmHg, pressureAtm);
+                        const zareDewPoint = calculateH2SO4DewPoint('zarenezhad', pH2OmmHg, pSO3mmHg, pressureAtm);
+                        
+                        yValuesMethod1.push(okkesDewPoint);
+                        yValuesMethod2.push(verhoffDewPoint);
+                        yValuesMethod3.push(zareDewPoint);
+                    } 
+                    else if (currentAcid === 'hcl') {
+                        const pHClmmHg = convertToMMHG(acidContent, acidUnit, pressureAtm);
+                        const hclDewPoint = calculateHClDewPoint(pH2OmmHg, pHClmmHg, pressureAtm);
+                        yValuesMethod1.push(hclDewPoint);
+                    } 
+                    else if (currentAcid === 'h2s') {
+                        const pH2SmmHg = convertToMMHG(acidContent, acidUnit, pressureAtm);
+                        const h2sDewPoint = calculateH2SDewPoint(pH2SmmHg, pressureAtm);
+                        yValuesMethod1.push(h2sDewPoint);
+                    }
+                }
+            } 
+            else if (currentGraphType === 'acid') {
+                // Vary acid content, keep water content constant
+                if (currentAcid === 'h2so4') {
+                    if (currentLanguage === 'ru') {
+                        graphTitle = 'Зависимость точки росы от содержания SO₃';
+                        xAxisLabel = 'Содержание SO₃ (ppm)';
+                        yAxisLabel = 'Точка росы (°C)';
+                        document.getElementById('graph-description').innerHTML = 'График показывает зависимость точки росы от содержания SO₃ при фиксированном содержании воды (H₂O).';
+                    } else {
+                        graphTitle = 'Dew Point vs SO₃ Content';
+                        xAxisLabel = 'SO₃ Content (ppm)';
+                        yAxisLabel = 'Dew Point (°C)';
+                        document.getElementById('graph-description').innerHTML = 'The graph shows the dependence of dew point on SO₃ content at fixed water content (H₂O).';
+                    }
+                    
+                    for (let so3ppm = 1; so3ppm <= 100; so3ppm += 5) {
+                        xValues.push(so3ppm);
+                        
+                        const pH2OmmHg = convertToMMHG(waterContent, waterUnit, pressureAtm);
+                        const pH2OFraction = convertToVolumeFraction(waterContent, waterUnit, pressureAtm);
+                        
+                        const pSO3mmHg = convertToMMHG(so3ppm, 'ppm', pressureAtm);
+                        const pSO3Fraction = convertToVolumeFraction(so3ppm, 'ppm', pressureAtm);
+                        
+                        // Calculate using different methods
+                        const okkesDewPoint = calculateH2SO4DewPoint('okkes', pH2OFraction, pSO3Fraction, pressureAtm);
+                        const verhoffDewPoint = calculateH2SO4DewPoint('verhoff', pH2OmmHg, pSO3mmHg, pressureAtm);
+                        const zareDewPoint = calculateH2SO4DewPoint('zarenezhad', pH2OmmHg, pSO3mmHg, pressureAtm);
+                        
+                        yValuesMethod1.push(okkesDewPoint);
+                        yValuesMethod2.push(verhoffDewPoint);
+                        yValuesMethod3.push(zareDewPoint);
+                        
+                        // Water dew point is constant
+                        const waterDewPointC = calculateWaterDewPoint(pH2OmmHg, pressureAtm);
+                        yValuesWater.push(waterDewPointC);
+                    }
+                } 
+                else if (currentAcid === 'hcl') {
+                    if (currentLanguage === 'ru') {
+                        graphTitle = 'Зависимость точки росы от содержания HCl';
+                        xAxisLabel = 'Содержание HCl (ppm)';
+                        yAxisLabel = 'Точка росы (°C)';
+                        document.getElementById('graph-description').innerHTML = 'График показывает зависимость точки росы от содержания HCl при фиксированном содержании воды (H₂O).';
+                    } else {
+                        graphTitle = 'Dew Point vs HCl Content';
+                        xAxisLabel = 'HCl Content (ppm)';
+                        yAxisLabel = 'Dew Point (°C)';
+                        document.getElementById('graph-description').innerHTML = 'The graph shows the dependence of dew point on HCl content at fixed water content (H₂O).';
+                    }
+                    
+                    for (let hclppm = 10; hclppm <= 1000; hclppm += 50) {
+                        xValues.push(hclppm);
+                        
+                        const pH2OmmHg = convertToMMHG(waterContent, waterUnit, pressureAtm);
+                        const pHClmmHg = convertToMMHG(hclppm, 'ppm', pressureAtm);
+                        
+                        const hclDewPoint = calculateHClDewPoint(pH2OmmHg, pHClmmHg, pressureAtm);
+                        yValuesMethod1.push(hclDewPoint);
+                        
+                        // Water dew point is constant
+                        const waterDewPointC = calculateWaterDewPoint(pH2OmmHg, pressureAtm);
+                        yValuesWater.push(waterDewPointC);
+                    }
+                } 
+                else if (currentAcid === 'h2s') {
+                    if (currentLanguage === 'ru') {
+                        graphTitle = 'Зависимость точки росы от содержания H₂S';
+                        xAxisLabel = 'Содержание H₂S (% об.)';
+                        yAxisLabel = 'Точка росы (°C)';
+                        document.getElementById('graph-description').innerHTML = 'График показывает зависимость точки росы от содержания H₂S при фиксированном содержании воды (H₂O).';
+                    } else {
+                        graphTitle = 'Dew Point vs H₂S Content';
+                        xAxisLabel = 'H₂S Content (% vol.)';
+                        yAxisLabel = 'Dew Point (°C)';
+                        document.getElementById('graph-description').innerHTML = 'The graph shows the dependence of dew point on H₂S content at fixed water content (H₂O).';
+                    }
+                    
+                    for (let h2sPercent = 0.1; h2sPercent <= 10; h2sPercent += 0.5) {
+                        xValues.push(h2sPercent);
+                        
+                        const pH2OmmHg = convertToMMHG(waterContent, waterUnit, pressureAtm);
+                        const pH2SmmHg = convertToMMHG(h2sPercent, 'percent', pressureAtm);
+                        
+                        const h2sDewPoint = calculateH2SDewPoint(pH2SmmHg, pressureAtm);
+                        yValuesMethod1.push(h2sDewPoint);
+                        
+                        // Water dew point is constant
+                        const waterDewPointC = calculateWaterDewPoint(pH2OmmHg, pressureAtm);
+                        yValuesWater.push(waterDewPointC);
+                    }
+                }
+            } 
+            else if (currentGraphType === 'pressure') {
+                // Vary pressure, keep other parameters constant
+                if (currentLanguage === 'ru') {
+                    graphTitle = 'Зависимость точки росы от давления';
+                    xAxisLabel = 'Давление (атм)';
+                    yAxisLabel = 'Точка росы (°C)';
+                    document.getElementById('graph-description').innerHTML = 'График показывает зависимость точки росы от давления системы при фиксированных содержаниях H₂O и кислотных компонентов.';
+                } else {
+                    graphTitle = 'Dew Point vs Pressure';
+                    xAxisLabel = 'Pressure (atm)';
+                    yAxisLabel = 'Dew Point (°C)';
+                    document.getElementById('graph-description').innerHTML = 'The graph shows the dependence of dew point on system pressure at fixed H₂O and acid component contents.';
+                }
+                
+                for (let pressure = 0.5; pressure <= 5; pressure += 0.25) {
+                    xValues.push(pressure);
+                    
+                    const pH2OmmHg = convertToMMHG(waterContent, waterUnit, pressure);
+                    const pH2OFraction = convertToVolumeFraction(waterContent, waterUnit, pressure);
+                    
+                    // Calculate water dew point
+                    const waterDewPointC = calculateWaterDewPoint(pH2OmmHg, pressure);
+                    yValuesWater.push(waterDewPointC);
+                    
+                    if (currentAcid === 'h2so4') {
+                        const pSO3mmHg = convertToMMHG(acidContent, acidUnit, pressure);
+                        const pSO3Fraction = convertToVolumeFraction(acidContent, acidUnit, pressure);
+                        
+                        // Calculate using different methods
+                        const okkesDewPoint = calculateH2SO4DewPoint('okkes', pH2OFraction, pSO3Fraction, pressure);
+                        const verhoffDewPoint = calculateH2SO4DewPoint('verhoff', pH2OmmHg, pSO3mmHg, pressure);
+                        const zareDewPoint = calculateH2SO4DewPoint('zarenezhad', pH2OmmHg, pSO3mmHg, pressure);
+                        
+                        yValuesMethod1.push(okkesDewPoint);
+                        yValuesMethod2.push(verhoffDewPoint);
+                        yValuesMethod3.push(zareDewPoint);
+                    } 
+                    else if (currentAcid === 'hcl') {
+                        const pHClmmHg = convertToMMHG(acidContent, acidUnit, pressure);
+                        const hclDewPoint = calculateHClDewPoint(pH2OmmHg, pHClmmHg, pressure);
+                        yValuesMethod1.push(hclDewPoint);
+                    } 
+                    else if (currentAcid === 'h2s') {
+                        const pH2SmmHg = convertToMMHG(acidContent, acidUnit, pressure);
+                        const h2sDewPoint = calculateH2SDewPoint(pH2SmmHg, pressure);
+                        yValuesMethod1.push(h2sDewPoint);
+                    }
+                }
+            } 
+            else if (currentGraphType === 'compare' && currentAcid === 'h2so4') {
+                // Compare different methods for H2SO4
+                if (currentLanguage === 'ru') {
+                    graphTitle = 'Сравнение методов расчета точки росы H₂SO₄';
+                    xAxisLabel = 'Содержание SO₃ (ppm)';
+                    yAxisLabel = 'Точка росы (°C)';
+                    document.getElementById('graph-description').innerHTML = 'График сравнивает различные методы расчета точки росы H₂SO₄ в зависимости от содержания SO₃ при фиксированном содержании воды.';
+                } else {
+                    graphTitle = 'Comparison of H₂SO₄ Dew Point Methods';
+                    xAxisLabel = 'SO₃ Content (ppm)';
+                    yAxisLabel = 'Dew Point (°C)';
+                    document.getElementById('graph-description').innerHTML = 'The graph compares different methods for calculating H₂SO₄ dew point as a function of SO₃ content at fixed water content.';
+                }
+                
+                for (let so3ppm = 1; so3ppm <= 100; so3ppm += 5) {
+                    xValues.push(so3ppm);
+                    
+                    const pH2OmmHg = convertToMMHG(waterContent, waterUnit, pressureAtm);
+                    const pH2OFraction = convertToVolumeFraction(waterContent, waterUnit, pressureAtm);
+                    
+                    const pSO3mmHg = convertToMMHG(so3ppm, 'ppm', pressureAtm);
+                    const pSO3Fraction = convertToVolumeFraction(so3ppm, 'ppm', pressureAtm);
+                    
+                    // Calculate using different methods
+                    const okkesDewPoint = calculateH2SO4DewPoint('okkes', pH2OFraction, pSO3Fraction, pressureAtm);
+                    const verhoffDewPoint = calculateH2SO4DewPoint('verhoff', pH2OmmHg, pSO3mmHg, pressureAtm);
+                    const zareDewPoint = calculateH2SO4DewPoint('zarenezhad', pH2OmmHg, pSO3mmHg, pressureAtm);
+                    
+                    yValuesMethod1.push(okkesDewPoint);
+                    yValuesMethod2.push(verhoffDewPoint);
+                    yValuesMethod3.push(zareDewPoint);
+                    
+                    // Water dew point
+                    const waterDewPointC = calculateWaterDewPoint(pH2OmmHg, pressureAtm);
+                    yValuesWater.push(waterDewPointC);
+                }
+            }
+            
+            // Create or update chart
+            if (dewPointChart) {
+                dewPointChart.destroy();
+            }
+            
+            const ctx = document.getElementById('dewPointChart').getContext('2d');
+            
+            const datasets = [];
+            
+            if (currentAcid === 'h2so4') {
+                if (currentGraphType === 'compare' || currentMethod === 'all') {
+                    // Add datasets for all methods
+                    datasets.push({
+                        label: 'Okkes (1987)',
+                        data: yValuesMethod1,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderWidth: 2,
+                        fill: false
+                    });
+                    
+                    datasets.push({
+                        label: 'Verhoff (1974)',
+                        data: yValuesMethod2,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderWidth: 2,
+                        fill: false
+                    });
+                    
+                    datasets.push({
+                        label: 'ZareNezhad (2009)',
+                        data: yValuesMethod3,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 2,
+                        fill: false
+                    });
+                } else {
+                    // Add dataset for selected method
+                    let methodLabel = '';
+                    let methodData = [];
+                    
+                    if (currentMethod === 'okkes') {
+                        methodLabel = 'Okkes (1987)';
+                        methodData = yValuesMethod1;
+                    } else if (currentMethod === 'verhoff') {
+                        methodLabel = 'Verhoff (1974)';
+                        methodData = yValuesMethod2;
+                    } else if (currentMethod === 'zarenezhad') {
+                        methodLabel = 'ZareNezhad (2009)';
+                        methodData = yValuesMethod3;
+                    }
+                    
+                    datasets.push({
+                        label: `H₂SO₄ (${methodLabel})`,
+                        data: methodData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderWidth: 2,
+                        fill: false
+                    });
+                }
+            } 
+            else if (currentAcid === 'hcl') {
+                datasets.push({
+                    label: 'HCl (Kiang 1981)',
+                    data: yValuesMethod1,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderWidth: 2,
+                    fill: false
+                });
+            } 
+            else if (currentAcid === 'h2s') {
+                datasets.push({
+                    label: 'H₂S (Antoine)',
+                    data: yValuesMethod1,
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderWidth: 2,
+                    fill: false
+                });
+            }
+            
+            // Add water dew point
+            datasets.push({
+                label: 'H₂O (Вода)',
+                data: yValuesWater,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderWidth: 2,
+                fill: false,
+                borderDash: [5, 5]
+            });
+            
+            dewPointChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xValues,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: graphTitle,
+                        fontSize: 16
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: xAxisLabel
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: yAxisLabel
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set Russian as default language
+            setLanguage('ru');
+            
+            // Add event listeners for acid type buttons
+            document.querySelectorAll('.acid-type-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.acid-type-btn').forEach(btn => {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    
+                    this.classList.remove('bg-gray-200', 'text-gray-700');
+                    this.classList.add('btn-primary');
+                    
+                    currentAcid = this.getAttribute('data-acid');
+                    
+                    // Show/hide content containers
+                    document.getElementById('so3-content-container').style.display = currentAcid === 'h2so4' ? 'block' : 'none';
+                    document.getElementById('hcl-content-container').style.display = currentAcid === 'hcl' ? 'block' : 'none';
+                    document.getElementById('h2s-content-container').style.display = currentAcid === 'h2s' ? 'block' : 'none';
+                    
+                    document.getElementById('so3-partial-section').style.display = currentAcid === 'h2so4' ? 'block' : 'none';
+                    document.getElementById('hcl-partial-section').style.display = currentAcid === 'hcl' ? 'block' : 'none';
+                    document.getElementById('h2s-partial-section').style.display = currentAcid === 'h2s' ? 'block' : 'none';
+                    
+                    document.getElementById('method-selection-h2so4').style.display = currentAcid === 'h2so4' ? 'block' : 'none';
+                    document.getElementById('method-selection-hcl').style.display = currentAcid === 'hcl' ? 'block' : 'none';
+                    document.getElementById('method-selection-h2s').style.display = currentAcid === 'h2s' ? 'block' : 'none';
+                    
+                    // Update dew point title
+                    if (currentAcid === 'h2so4') {
+                        document.getElementById('acid-dew-point-title-ru').textContent = 'Точка росы H₂SO₄';
+                        document.getElementById('acid-dew-point-title-en').textContent = 'H₂SO₄ Dew Point';
+                    } else if (currentAcid === 'hcl') {
+                        document.getElementById('acid-dew-point-title-ru').textContent = 'Точка росы HCl';
+                        document.getElementById('acid-dew-point-title-en').textContent = 'HCl Dew Point';
+                    } else if (currentAcid === 'h2s') {
+                        document.getElementById('acid-dew-point-title-ru').textContent = 'Точка росы H₂S';
+                        document.getElementById('acid-dew-point-title-en').textContent = 'H₂S Dew Point';
+                    }
+                    
+                    // Update method
+                    if (currentAcid === 'h2so4') {
+                        currentMethod = document.getElementById('calculation-method-h2so4').value;
+                    } else if (currentAcid === 'hcl') {
+                        currentMethod = document.getElementById('calculation-method-hcl').value;
+                    } else if (currentAcid === 'h2s') {
+                        currentMethod = document.getElementById('calculation-method-h2s').value;
+                    }
+                    
+                    // Perform calculations
+                    performCalculations();
+                });
+            });
+            
+            // Add event listeners for method selection
+            document.getElementById('calculation-method-h2so4').addEventListener('change', function() {
+                currentMethod = this.value;
+                
+                // Show/hide comparison results
+                if (currentMethod === 'all') {
+                    document.getElementById('comparison-results').style.display = 'block';
+                    document.getElementById('single-method-results').style.display = 'none';
+                } else {
+                    document.getElementById('comparison-results').style.display = 'none';
+                    document.getElementById('single-method-results').style.display = 'flex';
+                }
+                
+                performCalculations();
+            });
+            
+            document.getElementById('calculation-method-hcl').addEventListener('change', function() {
+                currentMethod = this.value;
+                performCalculations();
+            });
+            
+            document.getElementById('calculation-method-h2s').addEventListener('change', function() {
+                currentMethod = this.value;
+                performCalculations();
+            });
+            
+            // Add event listeners for graph type buttons
+            document.querySelectorAll('.graph-type-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.graph-type-btn').forEach(btn => {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    
+                    this.classList.remove('bg-gray-200', 'text-gray-700');
+                    this.classList.add('btn-primary');
+                    
+                    currentGraphType = this.id.replace('graph-type-', '');
+                    updateGraph();
+                });
+            });
+            
+            // Add event listeners for input fields and sliders
+            const inputFields = ['water-content', 'so3-content', 'hcl-content', 'h2s-content', 'system-pressure'];
+            const sliders = ['water-content-slider', 'so3-content-slider', 'hcl-content-slider', 'h2s-content-slider', 'system-pressure-slider'];
+            
+            inputFields.forEach((field, index) => {
+                const slider = sliders[index];
+                
+                document.getElementById(field).addEventListener('input', function() {
+                    document.getElementById(slider).value = this.value;
+                    performCalculations();
+                });
+                
+                document.getElementById(slider).addEventListener('input', function() {
+                    document.getElementById(field).value = this.value;
+                    performCalculations();
+                });
+            });
+            
+            // Add event listeners for unit selectors
+            const unitSelectors = ['water-units', 'so3-units', 'hcl-units', 'h2s-units', 'pressure-units'];
+            
+            unitSelectors.forEach(selector => {
+                document.getElementById(selector).addEventListener('change', performCalculations);
+            });
+            
+            // Add event listener for calculate button
+            document.getElementById('calculate-btn').addEventListener('click', performCalculations);
+            
+            // Add event listeners for tab buttons
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Hide all tabs
+                    document.querySelectorAll('.tab-content').forEach(tab => {
+                        tab.style.display = 'none';
+                        tab.classList.remove('fade-in');
+                    });
+                    
+                    // Show selected tab
+                    document.getElementById(tabId).style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById(tabId).classList.add('fade-in');
+                    }, 10);
+                    
+                    // Set active tab button
+                    document.querySelectorAll('.tab-btn').forEach(btn => {
+                        btn.classList.remove('tab-active');
+                    });
+                    
+                    this.classList.add('tab-active');
+                    
+                    // Update graph if showing calculator tab
+                    if (tabId === 'calculator' && dewPointChart) {
+                        dewPointChart.update();
+                    }
+                });
+            });
+            
+            // Language toggle
+            document.getElementById('langToggle').addEventListener('click', function() {
+                if (currentLanguage === 'ru') {
+                    setLanguage('en');
+                } else {
+                    setLanguage('ru');
+                }
+            });
+            
+            // Perform initial calculations
+            performCalculations();
+        });
+        
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            
+            if (lang === 'ru') {
+                document.querySelectorAll('.lang-ru').forEach(el => {
+                    el.style.display = 'inline-block';
+                });
+                
+                document.querySelectorAll('.lang-en').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                document.documentElement.lang = 'ru';
+            } else {
+                document.querySelectorAll('.lang-ru').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                document.querySelectorAll('.lang-en').forEach(el => {
+                    el.style.display = 'inline-block';
+                });
+                
+                document.documentElement.lang = 'en';
+            }
+            
+            // Update graph if it exists
+            if (dewPointChart) {
+                updateGraph();
+            }
+        }
+    </script>
+</body>
+</html>
