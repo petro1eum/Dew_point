@@ -2746,7 +2746,7 @@
             // Update graph
             updateGraph();
             
-            // Обновляем скорости коррозии
+            // Always update corrosion rates when calculations are performed
             updateCorrosionRates();
         }
         
@@ -2770,11 +2770,17 @@
             if (acidUnit === 'percent') {
                 standardizedAcidContent = acidContent * 10000; // Convert % to ppm
             } else if (acidUnit === 'mg/nm3') {
-                // Approximate conversion to ppm
+                // Конвертируем мг/нм³ в ppm для сравнения с табличными данными
+                let molecularWeight;
                 if (acidType === 'h2so4') {
-                    standardizedAcidContent = acidContent * 0.28; // SO3 mg/nm3 to ppm
+                    molecularWeight = 80.06; // SO3
+                    standardizedAcidContent = (acidContent * 22.4) / molecularWeight;
                 } else if (acidType === 'hcl') {
-                    standardizedAcidContent = acidContent * 0.61; // HCl mg/nm3 to ppm
+                    molecularWeight = 36.46; // HCl
+                    standardizedAcidContent = (acidContent * 22.4) / molecularWeight;
+                } else if (acidType === 'h2s') {
+                    molecularWeight = 34.08; // H2S
+                    standardizedAcidContent = (acidContent * 22.4) / molecularWeight;
                 }
             }
             
@@ -2797,7 +2803,7 @@
                     if (diff < minDiff) {
                         minDiff = diff;
                         closestSO3 = row.so3_ppm;
-                        closestReferenceValue = row[closestWaterKey.toString()]; // Важно: преобразовать в строку для доступа к свойству
+                        closestReferenceValue = row[closestWaterKey.toString()]; // Convert to string for property access
                     }
                 });
                 
@@ -2825,7 +2831,7 @@
                     if (diff < minDiff) {
                         minDiff = diff;
                         closestHCl = row.hcl_ppm;
-                        closestReferenceValue = row[closestWaterKey.toString()]; // Важно: преобразовать в строку для доступа к свойству
+                        closestReferenceValue = row[closestWaterKey.toString()]; // Convert to string for property access
                     }
                 });
                 
@@ -2848,7 +2854,7 @@
             
             // Calculate deviation if we have a reference value
             if (closestReferenceValue && closestReferenceValue !== "N/A") {
-                // Преобразуем в число в случае, если значение пришло как строка
+                // Convert reference value to number if it's a string
                 closestReferenceValue = parseFloat(closestReferenceValue);
                 
                 deviation = closestReferenceValue - calculatedDewPoint;
@@ -3426,6 +3432,11 @@
                 document.getElementById(slider).addEventListener('input', function() {
                     document.getElementById(field).value = this.value;
                     performCalculations();
+                    
+                    // This ensures corrosion rates update continuously while sliding
+                    requestAnimationFrame(() => {
+                        updateCorrosionRates();
+                    });
                 });
             });
             
@@ -3472,7 +3483,11 @@
                     // Сохраняем новую единицу измерения
                     this.dataset.currentUnit = newUnit;
                     
+                    // Run full calculations to update all values
                     performCalculations();
+                    
+                    // Ensure corrosion rates and reference values are updated
+                    updateCorrosionRates();
                 });
             });
             
@@ -3887,7 +3902,7 @@
         function createHeatmapCharts() {
             console.log("Creating heatmap charts");
             
-            // Очистить предыдущие графики, если они существуют
+            // Clear previous charts if they exist
             const h2so4Canvas = document.getElementById('h2so4HeatmapChart');
             const hclCanvas = document.getElementById('hclHeatmapChart');
             const corrosionCanvas = document.getElementById('corrosionRateChart');
@@ -4022,34 +4037,48 @@
             // Получаем текущие значения параметров
             const acidType = currentAcid;
             
-            // Текущие значения кислотного содержания
+            // Текущие значения кислотного содержания и единиц измерения
             let acidContent = 0;
+            let acidUnit = '';
+            
             if (acidType === 'h2so4') {
                 acidContent = parseFloat(document.getElementById('so3-content').value);
+                acidUnit = document.getElementById('so3-units').value;
             } else if (acidType === 'hcl') {
                 acidContent = parseFloat(document.getElementById('hcl-content').value);
+                acidUnit = document.getElementById('hcl-units').value;
             } else if (acidType === 'h2s') {
                 acidContent = parseFloat(document.getElementById('h2s-content').value);
+                acidUnit = document.getElementById('h2s-units').value;
             }
             
             // Текущая температура (считаем, что температура равна точке росы, худший случай)
             const dewPointC = parseFloat(document.getElementById('h2so4-dew-point').textContent);
             
-            // Пересчёт в проценты если используются ppm
+            // Конвертируем содержание кислоты в проценты для использования в модели коррозии
             let acidPercent = acidContent;
-            if (acidType === 'h2so4' || acidType === 'hcl') {
-                const acidUnit = document.getElementById(acidType === 'h2so4' ? 'so3-units' : 'hcl-units').value;
-                if (acidUnit === 'ppm') {
-                    acidPercent = acidContent / 10000;
+            if (acidUnit === 'ppm') {
+                acidPercent = acidContent / 10000; // Convert ppm to percent
+            } else if (acidUnit === 'mg/nm3') {
+                // Сперва переводим в ppm, затем в проценты
+                let molecularWeight;
+                if (acidType === 'h2so4') {
+                    molecularWeight = 80.06; // SO3
+                } else if (acidType === 'hcl') {
+                    molecularWeight = 36.46; // HCl
+                } else if (acidType === 'h2s') {
+                    molecularWeight = 34.08; // H2S
                 }
+                
+                const ppm = (acidContent * 22.4) / molecularWeight;
+                acidPercent = ppm / 10000;
             }
             
-            // Вместо выбора ближайшей концентрации и температуры, будем использовать интерполяцию
             // Определяем граничные значения для интерполяции
-            const concentrations = [3, 10, 20]; // Доступные концентрации
-            const temperatures = [40, 80]; // Доступные температуры
+            const concentrations = [3, 10, 20]; // Доступные концентрации в %
+            const temperatures = [40, 80]; // Доступные температуры в °C
             
-            // Ограничиваем значения в диапазоне имеющихся данных
+            // Ограничиваем значения в диапазоне имеющихся данных для коррекой интерполяции
             acidPercent = Math.min(Math.max(acidPercent, concentrations[0]), concentrations[concentrations.length - 1]);
             const tempValue = Math.min(Math.max(dewPointC, temperatures[0]), temperatures[temperatures.length - 1]);
             
@@ -4062,12 +4091,13 @@
                 const steelData = CorrosionHCL.data.find(d => d.steelType === materialNames[index]);
                 if (!steelData) return;
                 
-                // Интерполяция по концентрации и температуре
+                // Линейная интерполяция по температуре и концентрации
                 let finalCorrosionRate = 0;
                 
-                // Определяем ближайшие индексы для концентрации
+                // Находим индексы для интерполяции по концентрации
                 let lowerConcIdx = 0;
-                let upperConcIdx = 1;
+                let upperConcIdx = concentrations.length - 1;
+                
                 for (let i = 0; i < concentrations.length - 1; i++) {
                     if (acidPercent >= concentrations[i] && acidPercent <= concentrations[i + 1]) {
                         lowerConcIdx = i;
@@ -4076,56 +4106,25 @@
                     }
                 }
                 
-                // Получаем значения для интерполяции по температуре для обеих концентраций
-                const lowerConcRates = [];
-                const upperConcRates = [];
+                // Находим коэффициент для интерполяции концентрации
+                const concWeight = (acidPercent - concentrations[lowerConcIdx]) / 
+                                 (concentrations[upperConcIdx] - concentrations[lowerConcIdx]);
                 
-                for (let t = 0; t < temperatures.length; t++) {
-                    const datasetForTemp = steelData.datasets.find(d => d.temperature === temperatures[t]);
-                    if (datasetForTemp) {
-                        const lowerConcPoint = datasetForTemp.points.find(p => p.concentration === concentrations[lowerConcIdx]);
-                        const upperConcPoint = datasetForTemp.points.find(p => p.concentration === concentrations[upperConcIdx]);
-                        
-                        if (lowerConcPoint && upperConcPoint) {
-                            lowerConcRates.push(lowerConcPoint.corrosionRate);
-                            upperConcRates.push(upperConcPoint.corrosionRate);
-                        }
-                    }
-                }
+                // Находим коэффициент для интерполяции температуры
+                const tempWeight = (tempValue - temperatures[0]) / (temperatures[1] - temperatures[0]);
                 
-                // Если у нас есть все необходимые данные, выполняем двумерную интерполяцию
-                if (lowerConcRates.length === 2 && upperConcRates.length === 2) {
-                    // Интерполяция по концентрации для нижней температуры
-                    const concWeight = (acidPercent - concentrations[lowerConcIdx]) / 
-                                     (concentrations[upperConcIdx] - concentrations[lowerConcIdx]);
-                    
-                    const lowerTempRate = lowerConcRates[0] + concWeight * (upperConcRates[0] - lowerConcRates[0]);
-                    const upperTempRate = lowerConcRates[1] + concWeight * (upperConcRates[1] - lowerConcRates[1]);
-                    
-                    // Интерполяция по температуре
-                    const tempWeight = (tempValue - temperatures[0]) / (temperatures[1] - temperatures[0]);
-                    finalCorrosionRate = lowerTempRate + tempWeight * (upperTempRate - lowerTempRate);
-                }
+                // Биллинейная интерполяция (сперва по концентрации, затем по температуре)
+                const lowTempLowConcRate = steelData.datasets[0].points[lowerConcIdx].corrosionRate;
+                const lowTempHighConcRate = steelData.datasets[0].points[upperConcIdx].corrosionRate;
+                const highTempLowConcRate = steelData.datasets[1].points[lowerConcIdx].corrosionRate;
+                const highTempHighConcRate = steelData.datasets[1].points[upperConcIdx].corrosionRate;
                 
-                // Если интерполяция не сработала, используем старый метод
-                if (finalCorrosionRate === 0) {
-                    // Определяем ближайшую концентрацию
-                    let closestConcentration = 3; // По умолчанию
-                    if (acidPercent <= 5) closestConcentration = 3;
-                    else if (acidPercent <= 15) closestConcentration = 10;
-                    else closestConcentration = 20;
-                    
-                    // Определяем ближайшую температуру
-                    const temperature = dewPointC <= 60 ? 40 : 80;
-                    
-                    const tempData = steelData.datasets.find(d => d.temperature === temperature);
-                    if (tempData) {
-                        const dataPoint = tempData.points.find(p => p.concentration === closestConcentration);
-                        if (dataPoint) {
-                            finalCorrosionRate = dataPoint.corrosionRate;
-                        }
-                    }
-                }
+                // Интерполяция по концентрации для каждой температуры
+                const lowTempRate = lowTempLowConcRate + concWeight * (lowTempHighConcRate - lowTempLowConcRate);
+                const highTempRate = highTempLowConcRate + concWeight * (highTempHighConcRate - highTempLowConcRate);
+                
+                // Интерполяция по температуре
+                finalCorrosionRate = lowTempRate + tempWeight * (highTempRate - lowTempRate);
                 
                 // Обновляем отображение
                 document.getElementById(`${material}-rate`).textContent = finalCorrosionRate.toFixed(1);
@@ -4148,6 +4147,396 @@
                     }
                 }
             });
+        }
+
+        // Fix the unit labels function to handle all selectors
+        function updateUnitLabels() {
+            // Update percent display in all unit selectors
+            document.querySelectorAll('option[value="percent"]').forEach(option => {
+                option.textContent = currentLanguage === 'ru' ? '% об.' : '% vol.';
+            });
+            
+            // Update atm display in all unit selectors
+            document.querySelectorAll('option[value="atm"]').forEach(option => {
+                option.textContent = currentLanguage === 'ru' ? 'атм' : 'atm';
+            });
+            
+            // Update mmHg display in all unit selectors
+            document.querySelectorAll('option[value="mmHg"]').forEach(option => {
+                option.textContent = currentLanguage === 'ru' ? 'мм рт.ст.' : 'mmHg';
+            });
+            
+            // Update mg/nm3 display in all unit selectors  
+            document.querySelectorAll('option[value="mg/nm3"]').forEach(option => {
+                option.textContent = currentLanguage === 'ru' ? 'мг/нм³' : 'mg/nm³';
+            });
+        }
+
+        // Define the helper function but don't use it at the global scope
+        function getText(ruText, enText) {
+            return currentLanguage === 'ru' ? ruText : enText;
+        }
+
+        // Function to create H2SO4 heatmap chart
+        function createH2SO4Heatmap() {
+            const h2so4Canvas = document.getElementById('h2so4HeatmapChart');
+            if (!h2so4Canvas) return;
+            
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart(h2so4Canvas);
+            if (existingChart) existingChart.destroy();
+            
+            // Extract data from DewPointSourGas
+            const waterValues = [5, 10, 15, 20, 25, 30];
+            const so3Values = [];
+            
+            // Extract unique SO3 values and keep them under 100 ppm for visibility
+            DewPointSourGas.data.forEach(row => {
+                if (row.so3_ppm <= 100) {
+                    so3Values.push(row.so3_ppm);
+                }
+            });
+            
+            // Sort SO3 values
+            so3Values.sort((a, b) => a - b);
+            
+            // Create datasets for each water content
+            const datasets = waterValues.map(waterPercent => {
+                const waterKey = waterPercent.toString();
+                const data = [];
+                
+                // Get dew point values for this water percentage
+                so3Values.forEach(so3ppm => {
+                    const row = DewPointSourGas.data.find(r => r.so3_ppm === so3ppm);
+                    if (row && row[waterKey]) {
+                        data.push(row[waterKey]);
+                    } else {
+                        data.push(null); // Add null for missing data points
+                    }
+                });
+                
+                return {
+                    label: `${waterPercent}% H₂O`,
+                    data: data,
+                    borderColor: getColor(waterPercent, 1),
+                    backgroundColor: getColor(waterPercent, 0.5),
+                    fill: false,
+                    tension: 0.1
+                };
+            });
+            
+            // Create the chart
+            new Chart(h2so4Canvas, {
+                type: 'line',
+                data: {
+                    labels: so3Values.map(val => `${val} ppm`),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'right'
+                        },
+                        title: {
+                            display: true,
+                            text: currentLanguage === 'ru' ? 
+                                'Точка росы H₂SO₄ в зависимости от SO₃ и H₂O' : 
+                                'H₂SO₄ Dew Point vs SO₃ and H₂O content'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: currentLanguage === 'ru' ? 'Содержание SO₃ (ppm)' : 'SO₃ Content (ppm)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: currentLanguage === 'ru' ? 'Точка росы (°C)' : 'Dew Point (°C)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to create HCl heatmap chart
+        function createHClHeatmap() {
+            const hclCanvas = document.getElementById('hclHeatmapChart');
+            if (!hclCanvas) return;
+            
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart(hclCanvas);
+            if (existingChart) existingChart.destroy();
+            
+            // Extract data from DewPointHCL
+            const waterValues = [5, 10, 15, 20, 25, 30];
+            const hclValues = [];
+            
+            // Extract unique HCl values and keep them under 1000 ppm for visibility
+            DewPointHCL.data.forEach(row => {
+                if (row.hcl_ppm <= 1000) {
+                    hclValues.push(row.hcl_ppm);
+                }
+            });
+            
+            // Sort HCl values
+            hclValues.sort((a, b) => a - b);
+            
+            // Create datasets for each water content
+            const datasets = waterValues.map(waterPercent => {
+                const waterKey = waterPercent.toString();
+                const data = [];
+                
+                // Get dew point values for this water percentage
+                hclValues.forEach(hclppm => {
+                    const row = DewPointHCL.data.find(r => r.hcl_ppm === hclppm);
+                    if (row && row[waterKey]) {
+                        data.push(row[waterKey]);
+                    } else {
+                        data.push(null); // Add null for missing data points
+                    }
+                });
+                
+                return {
+                    label: `${waterPercent}% H₂O`,
+                    data: data,
+                    borderColor: getColor(waterPercent, 1),
+                    backgroundColor: getColor(waterPercent, 0.5),
+                    fill: false,
+                    tension: 0.1
+                };
+            });
+            
+            // Create the chart
+            new Chart(hclCanvas, {
+                type: 'line',
+                data: {
+                    labels: hclValues.map(val => `${val} ppm`),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'right'
+                        },
+                        title: {
+                            display: true,
+                            text: currentLanguage === 'ru' ? 
+                                'Точка росы HCl в зависимости от HCl и H₂O' : 
+                                'HCl Dew Point vs HCl and H₂O content'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: currentLanguage === 'ru' ? 'Содержание HCl (ppm)' : 'HCl Content (ppm)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: currentLanguage === 'ru' ? 'Точка росы (°C)' : 'Dew Point (°C)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Helper function for generating colors
+        function getColor(index, alpha = 1) {
+            const colors = [
+                `rgba(255, 99, 132, ${alpha})`,
+                `rgba(54, 162, 235, ${alpha})`,
+                `rgba(75, 192, 192, ${alpha})`,
+                `rgba(255, 206, 86, ${alpha})`,
+                `rgba(153, 102, 255, ${alpha})`,
+                `rgba(255, 159, 64, ${alpha})`
+            ];
+            
+            return colors[index % colors.length];
+        }
+
+        // Function to create Corrosion Rate chart
+        function createCorrosionRateChart() {
+            const corrosionCanvas = document.getElementById('corrosionRateChart');
+            if (!corrosionCanvas) return;
+            
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart(corrosionCanvas);
+            if (existingChart) existingChart.destroy();
+            
+            // Extract data from CorrosionHCL
+            const concentrations = [3, 10, 20]; // HCl concentrations in %
+            const materials = CorrosionHCL.data.map(m => m.steelType);
+            const datasets = [];
+            
+            // Check if we need to use a different scale type to be compatible with the version of Chart.js
+            let yAxisType = 'logarithmic';
+            try {
+                // Check Chart.js version and features
+                const chartVersion = Chart.version;
+                const versionParts = chartVersion.split('.').map(Number);
+                
+                // In older versions of Chart.js (< 3.0), logarithmic scales might not be available or have different names
+                if (versionParts[0] < 3) {
+                    console.log("Using older Chart.js version, adjusting scale type");
+                    yAxisType = 'linear'; // Fall back to linear scale for older versions
+                }
+            } catch (e) {
+                console.error("Chart.js version check failed, using linear scale:", e);
+                yAxisType = 'linear'; // Fall back to linear scale if there's any error
+            }
+            
+            // Create datasets for each material at each temperature
+            CorrosionHCL.data.forEach((material, index) => {
+                // Dataset for 40°C
+                const dataset40C = {
+                    label: `${material.steelType} @ 40°C`,
+                    data: material.datasets[0].points.map(p => p.corrosionRate),
+                    borderColor: getColorForMaterial(material.steelType, 1),
+                    backgroundColor: getColorForMaterial(material.steelType, 0.2),
+                    borderWidth: 2,
+                    fill: false
+                };
+                
+                // Dataset for 80°C
+                const dataset80C = {
+                    label: `${material.steelType} @ 80°C`,
+                    data: material.datasets[1].points.map(p => p.corrosionRate),
+                    borderColor: getColorForMaterial(material.steelType, 0.7),
+                    backgroundColor: getColorForMaterial(material.steelType, 0.5),
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false
+                };
+                
+                datasets.push(dataset40C, dataset80C);
+            });
+            
+            // Prepare chart configuration based on Chart.js version
+            let chartConfig = {
+                type: 'line',
+                data: {
+                    labels: concentrations.map(c => `${c}% HCl`),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'right'
+                        },
+                        title: {
+                            display: true,
+                            text: currentLanguage === 'ru' ? 
+                                'Скорость коррозии различных материалов в HCl' : 
+                                'Corrosion Rate of Different Materials in HCl'
+                        }
+                    }
+                }
+            };
+            
+            // Configure scales based on Chart.js version
+            try {
+                const chartVersion = Chart.version;
+                const versionParts = chartVersion.split('.').map(Number);
+                
+                if (versionParts[0] >= 3) {
+                    // Chart.js 3.x scales configuration
+                    chartConfig.options.scales = {
+                        x: {
+                            title: {
+                                display: true,
+                                text: currentLanguage === 'ru' ? 'Концентрация HCl (%)' : 'HCl Concentration (%)'
+                            }
+                        },
+                        y: {
+                            type: yAxisType,
+                            title: {
+                                display: true,
+                                text: currentLanguage === 'ru' ? 'Скорость коррозии (мг/см²/час)' : 'Corrosion Rate (mg/cm²/hour)'
+                            },
+                            min: 0.01 // Minimum value for better visibility with logarithmic scale
+                        }
+                    };
+                } else {
+                    // Chart.js 2.x scales configuration
+                    chartConfig.options.scales = {
+                        xAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                labelString: currentLanguage === 'ru' ? 'Концентрация HCl (%)' : 'HCl Concentration (%)'
+                            }
+                        }],
+                        yAxes: [{
+                            type: yAxisType,
+                            scaleLabel: {
+                                display: true,
+                                labelString: currentLanguage === 'ru' ? 'Скорость коррозии (мг/см²/час)' : 'Corrosion Rate (mg/cm²/hour)'
+                            },
+                            ticks: {
+                                min: 0.01 // Minimum value for better visibility with logarithmic scale
+                            }
+                        }]
+                    };
+                }
+            } catch (e) {
+                console.error("Error configuring scales, using default configuration:", e);
+                // Fallback scale configuration
+                chartConfig.options.scales = {
+                    xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: currentLanguage === 'ru' ? 'Концентрация HCl (%)' : 'HCl Concentration (%)'
+                        }
+                    }],
+                    yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: currentLanguage === 'ru' ? 'Скорость коррозии (мг/см²/час)' : 'Corrosion Rate (mg/cm²/hour)'
+                        }
+                    }]
+                };
+            }
+            
+            // Create the chart
+            new Chart(corrosionCanvas, chartConfig);
+        }
+
+        // Helper function to get color for material
+        function getColorForMaterial(material, alpha = 1) {
+            switch(material) {
+                case 'Mild Steel':
+                    return `rgba(255, 99, 132, ${alpha})`;
+                case 'SUS 304':
+                    return `rgba(54, 162, 235, ${alpha})`;
+                case 'SUS 316L':
+                    return `rgba(75, 192, 192, ${alpha})`;
+                default:
+                    return `rgba(153, 102, 255, ${alpha})`;
+            }
         }
 
     </script>
