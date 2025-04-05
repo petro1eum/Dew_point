@@ -2357,8 +2357,8 @@
                 } else if (currentAcid === 'h2s') {
                     // H2S molecular weight: 34.08 g/mol
                     ppm = (value * 22.4) / 34.08;
-                } else if (currentAcid === 'h2o') {
-                    // H2O molecular weight: 18.02 g/mol
+                } else {
+                    // Для воды (H2O) всегда используем молекулярную массу 18.02 g/mol
                     ppm = (value * 22.4) / 18.02;
                 }
                 return (ppm / 1000000) * pressure * 760; // ppm to mmHg
@@ -2384,8 +2384,8 @@
                 } else if (currentAcid === 'h2s') {
                     // H2S molecular weight: 34.08 g/mol
                     ppm = (value * 22.4) / 34.08;
-                } else if (currentAcid === 'h2o') {
-                    // H2O molecular weight: 18.02 g/mol
+                } else {
+                    // Для воды (H2O) всегда используем молекулярную массу 18.02 g/mol
                     ppm = (value * 22.4) / 18.02;
                 }
                 return ppm / 1000000; // ppm to fraction
@@ -2568,10 +2568,19 @@
             document.getElementById('water-dew-point').textContent = waterDewPointC.toFixed(1);
             document.getElementById('water-dew-point-f').textContent = `(${waterDewPointF.toFixed(1)} °F)`;
             
+            // Variables to store the calculated dew point for reference comparison
+            let calculatedDewPoint = 0;
+            let acidContentValue = 0;
+            let acidContentUnit = '';
+            
             if (currentAcid === 'h2so4') {
                 // Get SO3 input values
                 const so3Content = parseFloat(document.getElementById('so3-content').value);
                 const so3Unit = document.getElementById('so3-units').value;
+                
+                // Store for reference comparison
+                acidContentValue = so3Content;
+                acidContentUnit = so3Unit;
                 
                 // Calculate SO3 partial pressure in mmHg
                 const pSO3mmHg = convertToMMHG(so3Content, so3Unit, pressureAtm);
@@ -2591,6 +2600,9 @@
                     // Find maximum dew point
                     const maxDewPoint = Math.max(okkesDewPoint, verhoffDewPoint, zareDewPoint);
                     const recommendedTemp = maxDewPoint + 10;
+                    
+                    // Store for reference comparison
+                    calculatedDewPoint = maxDewPoint;
                     
                     // Update comparison table
                     document.getElementById('okkes-result').textContent = okkesDewPoint.toFixed(1) + ' °C';
@@ -2627,6 +2639,9 @@
                         dewPointC = calculateH2SO4DewPoint('zarenezhad', pH2OmmHg, pSO3mmHg, pressureAtm);
                     }
                     
+                    // Store for reference comparison
+                    calculatedDewPoint = dewPointC;
+                    
                     const dewPointF = celsiusToFahrenheit(dewPointC);
                     const recommendedTemp = dewPointC + 10;
                     const recommendedTempF = celsiusToFahrenheit(recommendedTemp);
@@ -2650,6 +2665,10 @@
                 const hclContent = parseFloat(document.getElementById('hcl-content').value);
                 const hclUnit = document.getElementById('hcl-units').value;
                 
+                // Store for reference comparison
+                acidContentValue = hclContent;
+                acidContentUnit = hclUnit;
+                
                 // Calculate HCl partial pressure in mmHg
                 const pHClmmHg = convertToMMHG(hclContent, hclUnit, pressureAtm);
                 
@@ -2658,6 +2677,10 @@
                 
                 // Calculate HCl dew point
                 const hclDewPointC = calculateHClDewPoint(pH2OmmHg, pHClmmHg, pressureAtm);
+                
+                // Store for reference comparison
+                calculatedDewPoint = hclDewPointC;
+                
                 const hclDewPointF = celsiusToFahrenheit(hclDewPointC);
                 const recommendedTemp = hclDewPointC + 10;
                 const recommendedTempF = celsiusToFahrenheit(recommendedTemp);
@@ -2680,6 +2703,10 @@
                 const h2sContent = parseFloat(document.getElementById('h2s-content').value);
                 const h2sUnit = document.getElementById('h2s-units').value;
                 
+                // Store for reference comparison
+                acidContentValue = h2sContent;
+                acidContentUnit = h2sUnit;
+                
                 // Calculate H2S partial pressure in mmHg
                 const pH2SmmHg = convertToMMHG(h2sContent, h2sUnit, pressureAtm);
                 
@@ -2688,6 +2715,10 @@
                 
                 // Calculate H2S dew point
                 const h2sDewPointC = calculateH2SDewPoint(pH2SmmHg, pressureAtm);
+                
+                // Store for reference comparison
+                calculatedDewPoint = h2sDewPointC;
+                
                 const h2sDewPointF = celsiusToFahrenheit(h2sDewPointC);
                 
                 // For H2S, the recommended temperature is above water dew point
@@ -2709,11 +2740,134 @@
                 updateRiskAssessment('h2s');
             }
             
+            // Update the reference data comparison section
+            updateReferenceDataComparison(currentAcid, waterContent, acidContentValue, acidContentUnit, calculatedDewPoint);
+            
             // Update graph
             updateGraph();
             
             // Обновляем скорости коррозии
             updateCorrosionRates();
+        }
+        
+        // Function to update the reference data comparison section
+        function updateReferenceDataComparison(acidType, waterPercent, acidContent, acidUnit, calculatedDewPoint) {
+            console.log("Updating reference comparison:", {acidType, waterPercent, acidContent, acidUnit, calculatedDewPoint});
+            
+            let referenceData = null;
+            let closestReferenceValue = null;
+            let closestConditions = "";
+            let deviation = 0;
+            let deviationPercent = 0;
+            
+            // Проверка на NaN и замена на нули
+            if (isNaN(waterPercent)) waterPercent = 0;
+            if (isNaN(acidContent)) acidContent = 0;
+            if (isNaN(calculatedDewPoint)) calculatedDewPoint = 0;
+            
+            // Convert to standard units for comparison
+            let standardizedAcidContent = acidContent;
+            if (acidUnit === 'percent') {
+                standardizedAcidContent = acidContent * 10000; // Convert % to ppm
+            } else if (acidUnit === 'mg/nm3') {
+                // Approximate conversion to ppm
+                if (acidType === 'h2so4') {
+                    standardizedAcidContent = acidContent * 0.28; // SO3 mg/nm3 to ppm
+                } else if (acidType === 'hcl') {
+                    standardizedAcidContent = acidContent * 0.61; // HCl mg/nm3 to ppm
+                }
+            }
+            
+            console.log("Standardized values:", {waterPercent, standardizedAcidContent});
+            
+            if (acidType === 'h2so4') {
+                // For H2SO4, use the SO3 reference data
+                // Find the closest water content
+                const waterKeys = [5, 10, 15, 20, 25, 30];
+                let closestWaterKey = waterKeys.reduce((prev, curr) => 
+                    Math.abs(curr - waterPercent) < Math.abs(prev - waterPercent) ? curr : prev
+                );
+                
+                // Find the closest SO3 value in the reference data
+                let closestSO3 = null;
+                let minDiff = Infinity;
+                
+                DewPointSourGas.data.forEach(row => {
+                    const diff = Math.abs(row.so3_ppm - standardizedAcidContent);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestSO3 = row.so3_ppm;
+                        closestReferenceValue = row[closestWaterKey.toString()]; // Важно: преобразовать в строку для доступа к свойству
+                    }
+                });
+                
+                console.log("SO3 reference lookup:", {closestWaterKey, closestSO3, closestReferenceValue});
+                
+                // Create the conditions text
+                closestConditions = `${currentLanguage === 'ru' ? 
+                    `При SO₃: ${closestSO3} ppm, H₂O: ${closestWaterKey}%` : 
+                    `At SO₃: ${closestSO3} ppm, H₂O: ${closestWaterKey}%`}`;
+                
+            } else if (acidType === 'hcl') {
+                // For HCl, use the HCl reference data
+                // Find the closest water content
+                const waterKeys = [5, 10, 15, 20, 25, 30];
+                let closestWaterKey = waterKeys.reduce((prev, curr) => 
+                    Math.abs(curr - waterPercent) < Math.abs(prev - waterPercent) ? curr : prev
+                );
+                
+                // Find the closest HCl value in the reference data
+                let closestHCl = null;
+                let minDiff = Infinity;
+                
+                DewPointHCL.data.forEach(row => {
+                    const diff = Math.abs(row.hcl_ppm - standardizedAcidContent);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestHCl = row.hcl_ppm;
+                        closestReferenceValue = row[closestWaterKey.toString()]; // Важно: преобразовать в строку для доступа к свойству
+                    }
+                });
+                
+                console.log("HCl reference lookup:", {closestWaterKey, closestHCl, closestReferenceValue});
+                
+                // Create the conditions text
+                closestConditions = `${currentLanguage === 'ru' ? 
+                    `При HCl: ${closestHCl} ppm, H₂O: ${closestWaterKey}%` : 
+                    `At HCl: ${closestHCl} ppm, H₂O: ${closestWaterKey}%`}`;
+                
+            } else if (acidType === 'h2s') {
+                // For H2S we don't have reference data in the same format
+                // We could calculate using a different formula and compare
+                // For now, just display N/A
+                closestReferenceValue = "N/A";
+                closestConditions = `${currentLanguage === 'ru' ? 
+                    `Недостаточно справочных данных` : 
+                    `Insufficient reference data`}`;
+            }
+            
+            // Calculate deviation if we have a reference value
+            if (closestReferenceValue && closestReferenceValue !== "N/A") {
+                // Преобразуем в число в случае, если значение пришло как строка
+                closestReferenceValue = parseFloat(closestReferenceValue);
+                
+                deviation = closestReferenceValue - calculatedDewPoint;
+                deviationPercent = calculatedDewPoint !== 0 ? (deviation / calculatedDewPoint) * 100 : 0;
+                
+                console.log("Deviation calculation:", {calculatedDewPoint, closestReferenceValue, deviation, deviationPercent});
+                
+                // Update the reference comparison section
+                document.getElementById('reference-value').textContent = closestReferenceValue;
+                document.getElementById('reference-conditions').textContent = closestConditions;
+                document.getElementById('reference-deviation').textContent = deviation.toFixed(1);
+                document.getElementById('deviation-percentage').textContent = `(${deviationPercent.toFixed(1)}%)`;
+            } else {
+                // No reference data available
+                document.getElementById('reference-value').textContent = "N/A";
+                document.getElementById('reference-conditions').textContent = closestConditions;
+                document.getElementById('reference-deviation').textContent = "N/A";
+                document.getElementById('deviation-percentage').textContent = "(N/A)";
+            }
         }
         
         function updateRiskAssessment(acidType) {
@@ -3315,8 +3469,89 @@
             const unitSelectors = ['water-units', 'so3-units', 'hcl-units', 'h2s-units', 'pressure-units'];
             
             unitSelectors.forEach(selector => {
-                document.getElementById(selector).addEventListener('change', performCalculations);
+                document.getElementById(selector).addEventListener('change', function() {
+                    // Конвертация значения при изменении единиц измерения
+                    const newUnit = this.value;
+                    let inputField;
+                    let oldValue;
+                    let oldUnit;
+                    
+                    if (selector === 'water-units') {
+                        inputField = document.getElementById('water-content');
+                        oldValue = parseFloat(inputField.value);
+                        oldUnit = this.dataset.currentUnit || 'percent'; // Используем текущее значение или 'percent' по умолчанию
+                        inputField.value = convertBetweenUnits(oldValue, oldUnit, newUnit, 'h2o');
+                        document.getElementById('water-content-slider').value = inputField.value;
+                    } 
+                    else if (selector === 'so3-units') {
+                        inputField = document.getElementById('so3-content');
+                        oldValue = parseFloat(inputField.value);
+                        oldUnit = this.dataset.currentUnit || 'ppm';
+                        inputField.value = convertBetweenUnits(oldValue, oldUnit, newUnit, 'h2so4');
+                        document.getElementById('so3-content-slider').value = inputField.value;
+                    }
+                    else if (selector === 'hcl-units') {
+                        inputField = document.getElementById('hcl-content');
+                        oldValue = parseFloat(inputField.value);
+                        oldUnit = this.dataset.currentUnit || 'ppm';
+                        inputField.value = convertBetweenUnits(oldValue, oldUnit, newUnit, 'hcl');
+                        document.getElementById('hcl-content-slider').value = inputField.value;
+                    }
+                    else if (selector === 'h2s-units') {
+                        inputField = document.getElementById('h2s-content');
+                        oldValue = parseFloat(inputField.value);
+                        oldUnit = this.dataset.currentUnit || 'percent';
+                        inputField.value = convertBetweenUnits(oldValue, oldUnit, newUnit, 'h2s');
+                        document.getElementById('h2s-content-slider').value = inputField.value;
+                    }
+                    
+                    // Сохраняем новую единицу измерения
+                    this.dataset.currentUnit = newUnit;
+                    
+                    performCalculations();
+                });
             });
+            
+            // Функция для конвертации между единицами измерения
+            function convertBetweenUnits(value, fromUnit, toUnit, substance) {
+                if (fromUnit === toUnit) return value;
+                
+                // Получаем молекулярную массу вещества
+                let molecularWeight;
+                if (substance === 'h2o') {
+                    molecularWeight = 18.02; // г/моль для H2O
+                } else if (substance === 'h2so4' || substance === 'so3') {
+                    molecularWeight = 80.06; // г/моль для SO3
+                } else if (substance === 'hcl') {
+                    molecularWeight = 36.46; // г/моль для HCl
+                } else if (substance === 'h2s') {
+                    molecularWeight = 34.08; // г/моль для H2S
+                }
+                
+                // Конвертируем в ppm как промежуточную единицу
+                let ppmValue;
+                
+                if (fromUnit === 'percent') {
+                    ppmValue = value * 10000; // из % об. в ppm
+                } else if (fromUnit === 'ppm') {
+                    ppmValue = value; // уже в ppm
+                } else if (fromUnit === 'mg/nm3') {
+                    // из мг/нм³ в ppm
+                    ppmValue = (value * 22.4) / molecularWeight;
+                }
+                
+                // Конвертируем из ppm в целевую единицу
+                if (toUnit === 'percent') {
+                    return ppmValue / 10000; // из ppm в % об.
+                } else if (toUnit === 'ppm') {
+                    return ppmValue; // оставляем в ppm
+                } else if (toUnit === 'mg/nm3') {
+                    // из ppm в мг/нм³
+                    return (ppmValue * molecularWeight) / 22.4;
+                }
+                
+                return value; // возвращаем исходное значение в случае ошибки
+            }
             
             // Add event listener for calculate button
             document.getElementById('calculate-btn').addEventListener('click', performCalculations);
@@ -3350,8 +3585,31 @@
                         dewPointChart.update();
                     }
                     
-                    // If showing reference data tab, refresh charts
+                    // If showing reference data tab, refresh charts and update reference comparison
                     if (tabId === 'reference-data') {
+                        // Получаем текущие значения для сравнения
+                        const waterContent = parseFloat(document.getElementById('water-content').value);
+                        const waterUnit = document.getElementById('water-units').value;
+                        let acidContent, acidUnit;
+                        
+                        if (currentAcid === 'h2so4') {
+                            acidContent = parseFloat(document.getElementById('so3-content').value);
+                            acidUnit = document.getElementById('so3-units').value;
+                        } else if (currentAcid === 'hcl') {
+                            acidContent = parseFloat(document.getElementById('hcl-content').value);
+                            acidUnit = document.getElementById('hcl-units').value;
+                        } else if (currentAcid === 'h2s') {
+                            acidContent = parseFloat(document.getElementById('h2s-content').value);
+                            acidUnit = document.getElementById('h2s-units').value;
+                        }
+                        
+                        // Получаем текущую точку росы
+                        const calculatedDewPoint = parseFloat(document.getElementById('h2so4-dew-point').textContent);
+                        
+                        // Обновляем сравнение с табличными данными
+                        updateReferenceDataComparison(currentAcid, waterContent, acidContent, acidUnit, calculatedDewPoint);
+                        
+                        // Создаем графики с небольшой задержкой
                         setTimeout(createHeatmapCharts, 100); // Small delay to ensure DOM is ready
                     }
                 });
@@ -3386,6 +3644,28 @@
                         document.getElementById('ref-corrosion-data').classList.remove('hidden');
                         setTimeout(() => createCorrosionRateChart(), 100);
                     }
+                    
+                    // Получаем текущие значения для сравнения
+                    const waterContent = parseFloat(document.getElementById('water-content').value);
+                    const waterUnit = document.getElementById('water-units').value;
+                    let acidContent, acidUnit;
+                    
+                    if (currentAcid === 'h2so4') {
+                        acidContent = parseFloat(document.getElementById('so3-content').value);
+                        acidUnit = document.getElementById('so3-units').value;
+                    } else if (currentAcid === 'hcl') {
+                        acidContent = parseFloat(document.getElementById('hcl-content').value);
+                        acidUnit = document.getElementById('hcl-units').value;
+                    } else if (currentAcid === 'h2s') {
+                        acidContent = parseFloat(document.getElementById('h2s-content').value);
+                        acidUnit = document.getElementById('h2s-units').value;
+                    }
+                    
+                    // Получаем текущую точку росы
+                    const calculatedDewPoint = parseFloat(document.getElementById('h2so4-dew-point').textContent);
+                    
+                    // Обновляем сравнение с табличными данными
+                    updateReferenceDataComparison(currentAcid, waterContent, acidContent, acidUnit, calculatedDewPoint);
                 });
             });
         });
@@ -3626,464 +3906,43 @@
         
         // Create heatmap charts for the reference data
         function createHeatmapCharts() {
-            // Create H2SO4 heatmap
-            createH2SO4Heatmap();
+            console.log("Creating heatmap charts");
             
-            // Create HCl heatmap
-            createHClHeatmap();
+            // Очистить предыдущие графики, если они существуют
+            const h2so4Canvas = document.getElementById('h2so4HeatmapChart');
+            const hclCanvas = document.getElementById('hclHeatmapChart');
+            const corrosionCanvas = document.getElementById('corrosionRateChart');
             
-            // Create corrosion rate chart
-            createCorrosionRateChart();
-        }
-        
-        function createH2SO4Heatmap() {
-            const canvas = document.getElementById('h2so4HeatmapChart');
-            if (!canvas) return;
-            
-            // Destroy existing chart if it exists
-            const existingChart = Chart.getChart(canvas);
-            if (existingChart) {
-                existingChart.destroy();
+            if (h2so4Canvas) {
+                const h2so4Chart = Chart.getChart(h2so4Canvas);
+                if (h2so4Chart) h2so4Chart.destroy();
             }
             
-            // Extract data for heatmap
-            const labels = ['5%', '10%', '15%', '20%', '25%', '30%'];
-            const dataPoints = [];
-            const so3Values = [];
-            
-            // Get data from DewPointSourGas
-            DewPointSourGas.data.forEach(row => {
-                if (row.so3_ppm <= 100) { // Limit to reasonable range
-                    so3Values.push(row.so3_ppm);
-                    const rowData = [row['5'], row['10'], row['15'], row['20'], row['25'], row['30']];
-                    dataPoints.push(rowData);
-                }
-            });
-            
-            // Create interpolated color steps
-            const maxTemp = Math.max(...dataPoints.flat().filter(v => v !== undefined));
-            const minTemp = Math.min(...dataPoints.flat().filter(v => v !== undefined));
-            
-            // Create dataset with colors
-            const dataset = {
-                labels: so3Values.map(v => v + ' ppm'),
-                datasets: labels.map((label, i) => {
-                    return {
-                        label: label,
-                        data: dataPoints.map(row => row[i]),
-                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1,
-                        parsing: {
-                            xAxisKey: 'x',
-                            yAxisKey: 'y'
-                        }
-                    };
-                })
-            };
-            
-            // Create the chart
-            const chart = new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels: so3Values.map(v => v + ' ppm'),
-                    datasets: [{
-                        label: 'Dew Point (°C)',
-                        data: so3Values.map((so3, idx) => {
-                            return {
-                                x: so3,
-                                y: dataPoints[idx][1] // Using 10% humidity as reference
-                            };
-                        }),
-                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: currentLanguage === 'ru' ? 
-                                'Точка росы H₂SO₄ в зависимости от SO₃ (при 10% H₂O)' : 
-                                'H₂SO₄ Dew Point vs SO₃ Content (at 10% H₂O)'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `SO₃: ${context.raw.x} ppm, ${currentLanguage === 'ru' ? 'Точка росы' : 'Dew Point'}: ${context.raw.y}°C`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'SO₃ (ppm)'
-                            },
-                            type: 'logarithmic'
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: currentLanguage === 'ru' ? 'Точка росы (°C)' : 'Dew Point (°C)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createHClHeatmap() {
-            const canvas = document.getElementById('hclHeatmapChart');
-            if (!canvas) return;
-            
-            // Destroy existing chart if it exists
-            const existingChart = Chart.getChart(canvas);
-            if (existingChart) {
-                existingChart.destroy();
+            if (hclCanvas) {
+                const hclChart = Chart.getChart(hclCanvas);
+                if (hclChart) hclChart.destroy();
             }
             
-            // Extract data for heatmap
-            const hclValues = [];
-            
-            // Get data from DewPointHCL, limiting to meaningful values
-            const limitedData = DewPointHCL.data.filter(row => row.hcl_ppm <= 1000);
-            
-            limitedData.forEach(row => {
-                hclValues.push(row.hcl_ppm);
-            });
-            
-            // Create the chart
-            const chart = new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels: hclValues.map(v => v + ' ppm'),
-                    datasets: [{
-                        label: 'Dew Point (°C)',
-                        data: hclValues.map((hcl, idx) => {
-                            return {
-                                x: hcl,
-                                y: limitedData[idx]['10'] // Using 10% humidity as reference
-                            };
-                        }),
-                        backgroundColor: 'rgba(75, 192, 192, 0.8)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: currentLanguage === 'ru' ? 
-                                'Точка росы HCl в зависимости от HCl (при 10% H₂O)' : 
-                                'HCl Dew Point vs HCl Content (at 10% H₂O)'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `HCl: ${context.raw.x} ppm, ${currentLanguage === 'ru' ? 'Точка росы' : 'Dew Point'}: ${context.raw.y}°C`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'HCl (ppm)'
-                            },
-                            type: 'logarithmic'
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: currentLanguage === 'ru' ? 'Точка росы (°C)' : 'Dew Point (°C)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        function createCorrosionRateChart() {
-            const canvas = document.getElementById('corrosionRateChart');
-            if (!canvas) return;
-            
-            // Destroy existing chart if it exists
-            const existingChart = Chart.getChart(canvas);
-            if (existingChart) {
-                existingChart.destroy();
+            if (corrosionCanvas) {
+                const corrosionChart = Chart.getChart(corrosionCanvas);
+                if (corrosionChart) corrosionChart.destroy();
             }
             
-            // Prepare data for the chart
-            const steelTypes = CorrosionHCL.steelTypes;
-            const concentrations = [3, 10, 20]; // HCl concentrations
+            // Create H2SO4 heatmap only if the panel is visible
+            if (!document.getElementById('ref-h2so4-data').classList.contains('hidden')) {
+                createH2SO4Heatmap();
+            }
             
-            // Datasets for 40°C and 80°C
-            const datasets40C = [];
-            const datasets80C = [];
+            // Create HCl heatmap only if the panel is visible
+            if (!document.getElementById('ref-hcl-data').classList.contains('hidden')) {
+                createHClHeatmap();
+            }
             
-            // Create datasets
-            steelTypes.forEach((steelType, index) => {
-                const steelData = CorrosionHCL.data.find(d => d.steelType === steelType);
-                if (steelData) {
-                    // 40°C data
-                    const data40C = steelData.datasets.find(d => d.temperature === 40);
-                    if (data40C) {
-                        datasets40C.push({
-                            label: `${steelType} (40°C)`,
-                            data: data40C.points.map(p => p.corrosionRate),
-                            backgroundColor: `rgba(54, 162, ${235 - index * 70}, 0.5)`,
-                            borderColor: `rgba(54, 162, ${235 - index * 70}, 1)`,
-                            borderWidth: 1
-                        });
-                    }
-                    
-                    // 80°C data
-                    const data80C = steelData.datasets.find(d => d.temperature === 80);
-                    if (data80C) {
-                        datasets80C.push({
-                            label: `${steelType} (80°C)`,
-                            data: data80C.points.map(p => p.corrosionRate),
-                            backgroundColor: `rgba(255, ${99 + index * 70}, 132, 0.5)`,
-                            borderColor: `rgba(255, ${99 + index * 70}, 132, 1)`,
-                            borderWidth: 1
-                        });
-                    }
-                }
-            });
-            
-            // Combine datasets
-            const allDatasets = [...datasets40C, ...datasets80C];
-            
-            // Create the chart
-            const corrosionChart = new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels: concentrations.map(c => `${c}% HCl`),
-                    datasets: allDatasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'HCl Concentration (%)'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: currentLanguage === 'ru' ? 'Скорость коррозии (мг/см²/час)' : 'Corrosion Rate (mg/cm²/hour)'
-                            },
-                            type: 'logarithmic'
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: currentLanguage === 'ru' ? 
-                                'Скорость коррозии различных материалов в HCl' : 
-                                'Corrosion Rate of Different Materials in HCl'
-                        },
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
+            // Create corrosion rate chart only if the panel is visible
+            if (!document.getElementById('ref-corrosion-data').classList.contains('hidden')) {
+                createCorrosionRateChart();
+            }
         }
-        
-        // Call createHeatmapCharts when loading the page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set Russian as default language
-            setLanguage('ru');
-            
-            // Populate reference data tables
-            populateReferenceTables();
-            
-            // Create heatmap charts
-            createHeatmapCharts();
-            
-            // Add event listeners for acid type buttons
-            document.querySelectorAll('.acid-type-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    document.querySelectorAll('.acid-type-btn').forEach(btn => {
-                        btn.classList.remove('btn-primary');
-                        btn.classList.add('bg-gray-200', 'text-gray-700');
-                    });
-                    
-                    this.classList.remove('bg-gray-200', 'text-gray-700');
-                    this.classList.add('btn-primary');
-                    
-                    currentAcid = this.getAttribute('data-acid');
-                    
-                    // Show/hide content containers
-                    document.getElementById('so3-content-container').style.display = currentAcid === 'h2so4' ? 'block' : 'none';
-                    document.getElementById('hcl-content-container').style.display = currentAcid === 'hcl' ? 'block' : 'none';
-                    document.getElementById('h2s-content-container').style.display = currentAcid === 'h2s' ? 'block' : 'none';
-                    
-                    document.getElementById('so3-partial-section').style.display = currentAcid === 'h2so4' ? 'block' : 'none';
-                    document.getElementById('hcl-partial-section').style.display = currentAcid === 'hcl' ? 'block' : 'none';
-                    document.getElementById('h2s-partial-section').style.display = currentAcid === 'h2s' ? 'block' : 'none';
-                    
-                    document.getElementById('method-selection-h2so4').style.display = currentAcid === 'h2so4' ? 'block' : 'none';
-                    document.getElementById('method-selection-hcl').style.display = currentAcid === 'hcl' ? 'block' : 'none';
-                    document.getElementById('method-selection-h2s').style.display = currentAcid === 'h2s' ? 'block' : 'none';
-                    
-                    // Update dew point title
-                    if (currentAcid === 'h2so4') {
-                        document.getElementById('acid-dew-point-title-ru').textContent = 'Точка росы H₂SO₄';
-                        document.getElementById('acid-dew-point-title-en').textContent = 'H₂SO₄ Dew Point';
-                    } else if (currentAcid === 'hcl') {
-                        document.getElementById('acid-dew-point-title-ru').textContent = 'Точка росы HCl';
-                        document.getElementById('acid-dew-point-title-en').textContent = 'HCl Dew Point';
-                    } else if (currentAcid === 'h2s') {
-                        document.getElementById('acid-dew-point-title-ru').textContent = 'Точка росы H₂S';
-                        document.getElementById('acid-dew-point-title-en').textContent = 'H₂S Dew Point';
-                    }
-                    
-                    // Update method
-                    if (currentAcid === 'h2so4') {
-                        currentMethod = document.getElementById('calculation-method-h2so4').value;
-                    } else if (currentAcid === 'hcl') {
-                        currentMethod = document.getElementById('calculation-method-hcl').value;
-                    } else if (currentAcid === 'h2s') {
-                        currentMethod = document.getElementById('calculation-method-h2s').value;
-                    }
-                    
-                    // Perform calculations
-                    performCalculations();
-                });
-            });
-            
-            // Add event listeners for method selection
-            document.getElementById('calculation-method-h2so4').addEventListener('change', function() {
-                currentMethod = this.value;
-                
-                // Show/hide comparison results
-                if (currentMethod === 'all') {
-                    document.getElementById('comparison-results').style.display = 'block';
-                    document.getElementById('single-method-results').style.display = 'none';
-                } else {
-                    document.getElementById('comparison-results').style.display = 'none';
-                    document.getElementById('single-method-results').style.display = 'flex';
-                }
-                
-                performCalculations();
-            });
-            
-            document.getElementById('calculation-method-hcl').addEventListener('change', function() {
-                currentMethod = this.value;
-                performCalculations();
-            });
-            
-            document.getElementById('calculation-method-h2s').addEventListener('change', function() {
-                currentMethod = this.value;
-                performCalculations();
-            });
-            
-            // Add event listeners for graph type buttons
-            document.querySelectorAll('.graph-type-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    document.querySelectorAll('.graph-type-btn').forEach(btn => {
-                        btn.classList.remove('btn-primary');
-                        btn.classList.add('bg-gray-200', 'text-gray-700');
-                    });
-                    
-                    this.classList.remove('bg-gray-200', 'text-gray-700');
-                    this.classList.add('btn-primary');
-                    
-                    currentGraphType = this.id.replace('graph-type-', '');
-                    updateGraph();
-                });
-            });
-            
-            // Add event listeners for input fields and sliders
-            const inputFields = ['water-content', 'so3-content', 'hcl-content', 'h2s-content', 'system-pressure'];
-            const sliders = ['water-content-slider', 'so3-content-slider', 'hcl-content-slider', 'h2s-content-slider', 'system-pressure-slider'];
-            
-            inputFields.forEach((field, index) => {
-                const slider = sliders[index];
-                
-                document.getElementById(field).addEventListener('input', function() {
-                    document.getElementById(slider).value = this.value;
-                    performCalculations();
-                });
-                
-                document.getElementById(slider).addEventListener('input', function() {
-                    document.getElementById(field).value = this.value;
-                    performCalculations();
-                });
-            });
-            
-            // Add event listeners for unit selectors
-            const unitSelectors = ['water-units', 'so3-units', 'hcl-units', 'h2s-units', 'pressure-units'];
-            
-            unitSelectors.forEach(selector => {
-                document.getElementById(selector).addEventListener('change', performCalculations);
-            });
-            
-            // Add event listener for calculate button
-            document.getElementById('calculate-btn').addEventListener('click', performCalculations);
-            
-            // Add event listeners for tab buttons
-            document.querySelectorAll('.tab-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    
-                    // Hide all tabs
-                    document.querySelectorAll('.tab-content').forEach(tab => {
-                        tab.style.display = 'none';
-                        tab.classList.remove('fade-in');
-                    });
-                    
-                    // Show selected tab
-                    document.getElementById(tabId).style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById(tabId).classList.add('fade-in');
-                    }, 10);
-                    
-                    // Set active tab button
-                    document.querySelectorAll('.tab-btn').forEach(btn => {
-                        btn.classList.remove('tab-active');
-                    });
-                    
-                    this.classList.add('tab-active');
-                    
-                    // Update graph if showing calculator tab
-                    if (tabId === 'calculator' && dewPointChart) {
-                        dewPointChart.update();
-                    }
-                    
-                    // If showing reference data tab, refresh charts
-                    if (tabId === 'reference-data') {
-                        setTimeout(createHeatmapCharts, 100); // Small delay to ensure DOM is ready
-                    }
-                });
-            });
-            
-            // Language toggle
-            document.getElementById('langToggle').addEventListener('click', function() {
-                if (currentLanguage === 'ru') {
-                    setLanguage('en');
-                } else {
-                    setLanguage('ru');
-                }
-            });
-            
-            // Perform initial calculations
-            performCalculations();
-        });
 
         // Update unit display texts for each language
         function updateUnitLabels() {
