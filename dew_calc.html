@@ -2711,6 +2711,9 @@
             
             // Update graph
             updateGraph();
+            
+            // Обновляем скорости коррозии
+            updateCorrosionRates();
         }
         
         function updateRiskAssessment(acidType) {
@@ -4175,6 +4178,140 @@
         function getText(ruText, enText) {
             return currentLanguage === 'ru' ? ruText : enText;
         }
+
+        // Функция для расчета скорости коррозии
+        function updateCorrosionRates() {
+            // Получаем текущие значения параметров
+            const acidType = currentAcid;
+            
+            // Текущие значения кислотного содержания
+            let acidContent = 0;
+            if (acidType === 'h2so4') {
+                acidContent = parseFloat(document.getElementById('so3-content').value);
+            } else if (acidType === 'hcl') {
+                acidContent = parseFloat(document.getElementById('hcl-content').value);
+            } else if (acidType === 'h2s') {
+                acidContent = parseFloat(document.getElementById('h2s-content').value);
+            }
+            
+            // Текущая температура (считаем, что температура равна точке росы, худший случай)
+            const dewPointC = parseFloat(document.getElementById('h2so4-dew-point').textContent);
+            
+            // Пересчёт в проценты если используются ppm
+            let acidPercent = acidContent;
+            if (acidType === 'h2so4' || acidType === 'hcl') {
+                const acidUnit = document.getElementById(acidType === 'h2so4' ? 'so3-units' : 'hcl-units').value;
+                if (acidUnit === 'ppm') {
+                    acidPercent = acidContent / 10000;
+                }
+            }
+            
+            // Вместо выбора ближайшей концентрации и температуры, будем использовать интерполяцию
+            // Определяем граничные значения для интерполяции
+            const concentrations = [3, 10, 20]; // Доступные концентрации
+            const temperatures = [40, 80]; // Доступные температуры
+            
+            // Ограничиваем значения в диапазоне имеющихся данных
+            acidPercent = Math.min(Math.max(acidPercent, concentrations[0]), concentrations[concentrations.length - 1]);
+            const tempValue = Math.min(Math.max(dewPointC, temperatures[0]), temperatures[temperatures.length - 1]);
+            
+            // Обновляем значения скорости коррозии для всех материалов
+            const materials = ['carbon-steel', 'ss304', 'ss316l'];
+            const materialNames = ['Mild Steel', 'SUS 304', 'SUS 316L'];
+            
+            materials.forEach((material, index) => {
+                // Находим данные для этого материала
+                const steelData = CorrosionHCL.data.find(d => d.steelType === materialNames[index]);
+                if (!steelData) return;
+                
+                // Интерполяция по концентрации и температуре
+                let finalCorrosionRate = 0;
+                
+                // Определяем ближайшие индексы для концентрации
+                let lowerConcIdx = 0;
+                let upperConcIdx = 1;
+                for (let i = 0; i < concentrations.length - 1; i++) {
+                    if (acidPercent >= concentrations[i] && acidPercent <= concentrations[i + 1]) {
+                        lowerConcIdx = i;
+                        upperConcIdx = i + 1;
+                        break;
+                    }
+                }
+                
+                // Получаем значения для интерполяции по температуре для обеих концентраций
+                const lowerConcRates = [];
+                const upperConcRates = [];
+                
+                for (let t = 0; t < temperatures.length; t++) {
+                    const datasetForTemp = steelData.datasets.find(d => d.temperature === temperatures[t]);
+                    if (datasetForTemp) {
+                        const lowerConcPoint = datasetForTemp.points.find(p => p.concentration === concentrations[lowerConcIdx]);
+                        const upperConcPoint = datasetForTemp.points.find(p => p.concentration === concentrations[upperConcIdx]);
+                        
+                        if (lowerConcPoint && upperConcPoint) {
+                            lowerConcRates.push(lowerConcPoint.corrosionRate);
+                            upperConcRates.push(upperConcPoint.corrosionRate);
+                        }
+                    }
+                }
+                
+                // Если у нас есть все необходимые данные, выполняем двумерную интерполяцию
+                if (lowerConcRates.length === 2 && upperConcRates.length === 2) {
+                    // Интерполяция по концентрации для нижней температуры
+                    const concWeight = (acidPercent - concentrations[lowerConcIdx]) / 
+                                     (concentrations[upperConcIdx] - concentrations[lowerConcIdx]);
+                    
+                    const lowerTempRate = lowerConcRates[0] + concWeight * (upperConcRates[0] - lowerConcRates[0]);
+                    const upperTempRate = lowerConcRates[1] + concWeight * (upperConcRates[1] - lowerConcRates[1]);
+                    
+                    // Интерполяция по температуре
+                    const tempWeight = (tempValue - temperatures[0]) / (temperatures[1] - temperatures[0]);
+                    finalCorrosionRate = lowerTempRate + tempWeight * (upperTempRate - lowerTempRate);
+                }
+                
+                // Если интерполяция не сработала, используем старый метод
+                if (finalCorrosionRate === 0) {
+                    // Определяем ближайшую концентрацию
+                    let closestConcentration = 3; // По умолчанию
+                    if (acidPercent <= 5) closestConcentration = 3;
+                    else if (acidPercent <= 15) closestConcentration = 10;
+                    else closestConcentration = 20;
+                    
+                    // Определяем ближайшую температуру
+                    const temperature = dewPointC <= 60 ? 40 : 80;
+                    
+                    const tempData = steelData.datasets.find(d => d.temperature === temperature);
+                    if (tempData) {
+                        const dataPoint = tempData.points.find(p => p.concentration === closestConcentration);
+                        if (dataPoint) {
+                            finalCorrosionRate = dataPoint.corrosionRate;
+                        }
+                    }
+                }
+                
+                // Обновляем отображение
+                document.getElementById(`${material}-rate`).textContent = finalCorrosionRate.toFixed(1);
+                
+                // Обновляем описание скорости коррозии
+                const rateDesc = document.getElementById(`${material}-rate`).nextElementSibling.nextElementSibling;
+                if (rateDesc) {
+                    if (currentLanguage === 'ru') {
+                        if (finalCorrosionRate < 0.1) rateDesc.innerHTML = '<span class="lang-ru">Очень низкая скорость</span>';
+                        else if (finalCorrosionRate < 1.0) rateDesc.innerHTML = '<span class="lang-ru">Низкая скорость</span>';
+                        else if (finalCorrosionRate < 5.0) rateDesc.innerHTML = '<span class="lang-ru">Средняя скорость</span>';
+                        else if (finalCorrosionRate < 20.0) rateDesc.innerHTML = '<span class="lang-ru">Высокая скорость</span>';
+                        else rateDesc.innerHTML = '<span class="lang-ru">Очень высокая скорость</span>';
+                    } else {
+                        if (finalCorrosionRate < 0.1) rateDesc.innerHTML = '<span class="lang-en">Very low rate</span>';
+                        else if (finalCorrosionRate < 1.0) rateDesc.innerHTML = '<span class="lang-en">Low rate</span>';
+                        else if (finalCorrosionRate < 5.0) rateDesc.innerHTML = '<span class="lang-en">Moderate rate</span>';
+                        else if (finalCorrosionRate < 20.0) rateDesc.innerHTML = '<span class="lang-en">High rate</span>';
+                        else rateDesc.innerHTML = '<span class="lang-en">Very high rate</span>';
+                    }
+                }
+            });
+        }
+
     </script>
 </body>
 </html>
