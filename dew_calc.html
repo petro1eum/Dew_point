@@ -250,16 +250,32 @@
 <body class="print-friendly">
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
-        <header class="header-gradient text-white py-6 px-4 rounded-lg shadow-lg mb-8">
+        <header class="header-gradient text-white py-6 px-6 rounded-lg shadow-lg mb-8">
             <div class="flex flex-wrap items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold lang-ru">Калькулятор точки росы кислотной коррозии</h1>
-                    <h1 class="text-3xl font-bold lang-en">Acid Dew Point Calculator</h1>
-                    <p class="text-sm mt-2 max-w-lg lang-ru">Научно точный инструмент для расчета температуры точки росы H₂SO₄, HCl и H₂S в газовых потоках</p>
-                    <p class="text-sm mt-2 max-w-lg lang-en">Scientifically accurate tool for calculating acid dew point temperatures of H₂SO₄, HCl, and H₂S in gas streams</p>
+                <div class="flex-1">
+                    <div class="flex items-center">
+                        <div class="mr-3">
+                            <i class="fas fa-thermometer-half text-3xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold lang-ru">Калькулятор точки росы кислотной коррозии</h1>
+                            <h1 class="text-3xl font-bold lang-en">Acid Dew Point Calculator</h1>
+                            <div class="flex items-center mt-2">
+                                <div class="flex-shrink-0 text-xs bg-white bg-opacity-20 px-2 py-1 rounded">
+                                    <span class="font-semibold">H₂SO₄</span>
+                                    <span class="mx-1">•</span>
+                                    <span class="font-semibold">HCl</span>
+                                    <span class="mx-1">•</span>
+                                    <span class="font-semibold">H₂S</span>
+                                </div>
+                                <p class="text-sm ml-3 max-w-lg lang-ru">Научно точный инструмент для расчета температуры точки росы в газовых потоках</p>
+                                <p class="text-sm ml-3 max-w-lg lang-en">Scientifically accurate tool for calculating acid dew point temperatures in gas streams</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center mt-4 sm:mt-0">
-                    <button id="langToggle" class="btn-primary flex items-center">
+                <div class="flex items-center ml-4">
+                    <button id="langToggle" class="btn-primary flex items-center py-2 px-4 rounded-full shadow hover:shadow-lg transition-all">
                         <i class="fas fa-globe mr-2"></i>
                         <span class="lang-ru">EN</span>
                         <span class="lang-en">RU</span>
@@ -331,7 +347,7 @@
                                     <span class="lang-en">Calculation Method</span>
                                 </label>
                                 <select id="calculation-method-h2so4" class="form-control">
-                                    <option value="okkes" class="lang-ru">Okkes (1987) - стандартный метод</option>
+                                    <option value="okkes" class="lang-ru">Okkes (1987) </option>
                                     <option value="okkes" class="lang-en">Okkes (1987) - standard method</option>
                                     <option value="verhoff" class="lang-ru">Verhoff & Banchero (1974)</option>
                                     <option value="verhoff" class="lang-en">Verhoff & Banchero (1974)</option>
@@ -727,10 +743,10 @@
                                                 <div class="text-sm font-medium">
                                                     <span class="lang-ru">Углеродистая сталь:</span>
                                                     <span class="lang-en">Carbon Steel:</span>
-                                </div>
+                                                </div>
                                                 <div class="flex items-baseline">
                                                     <span id="carbon-steel-rate" class="text-lg font-bold text-red-700">20.0</span>
-                                                    <span class="text-xs ml-1 text-gray-700">мг/см²/час</span>
+                                                    <span class="text-xs ml-1 text-gray-700 predicted-unit" data-lang-ru="мг/см²/час" data-lang-en="mg/cm²/hour"></span>
                                                 </div>
                                                 <div class="text-xs text-gray-600 mt-1">
                                                     <span class="lang-ru">Очень высокая скорость</span>
@@ -744,7 +760,7 @@
                                                 </div>
                                                 <div class="flex items-baseline">
                                                     <span id="ss304-rate" class="text-lg font-bold text-orange-600">1.0</span>
-                                                    <span class="text-xs ml-1 text-gray-700">мг/см²/час</span>
+                                                    <span class="text-xs ml-1 text-gray-700 predicted-unit" data-lang-ru="мг/см²/час" data-lang-en="mg/cm²/hour"></span>
                                                 </div>
                                                 <div class="text-xs text-gray-600 mt-1">
                                                     <span class="lang-ru">Средняя скорость</span>
@@ -757,8 +773,8 @@
                                                     <span class="lang-en">SS 316L:</span>
                                                 </div>
                                                 <div class="flex items-baseline">
-                                                    <span id="ss316l-rate" class="text-lg font-bold text-green-600">0.2</span>
-                                                    <span class="text-xs ml-1 text-gray-700">мг/см²/час</span>
+                                                    <span id="ss316l-rate" class="text-lg font-bold text-green-600">1.0</span>
+                                                    <span class="text-xs ml-1 text-gray-700 predicted-unit" data-lang-ru="мг/см²/час" data-lang-en="mg/cm²/hour"></span>
                                                 </div>
                                                 <div class="text-xs text-gray-600 mt-1">
                                                     <span class="lang-ru">Низкая скорость</span>
@@ -840,14 +856,35 @@
                     </div>
                     
                     <!-- H2SO4 Reference Data -->
-                    <div id="ref-h2so4-data" class="card p-6">
+                    <div id="ref-h2so4-data" class="card p-6 hidden">
                         <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
-                            <i class="fas fa-table mr-2 text-blue-600"></i>
-                            <span class="lang-ru">Таблица точек росы серной кислоты для газа типа SO₃-H₂O</span>
-                            <span class="lang-en">Sulfuric Acid Dew Point Table for SO₃-H₂O Gas</span>
+                            <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+                            <span class="lang-ru">Данные точек росы серной кислоты</span>
+                            <span class="lang-en">Sulfuric Acid Dew Point Data</span>
                         </h2>
-                        
-                        <div class="overflow-x-auto">
+
+                        <!-- Visualization Section -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-3 text-gray-700">
+                                <span class="lang-ru">Визуализация данных</span>
+                                <span class="lang-en">Data Visualization</span>
+                            </h3>
+                            <div class="bg-blue-50 p-4 rounded shadow-inner">
+                                <div class="mb-3">
+                                    <canvas id="h2so4HeatmapChart" width="400" height="300"></canvas>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">
+                                    <span class="lang-ru">График зависимости температуры точки росы от содержания SO₃ и воды.</span>
+                                    <span class="lang-en">Chart showing the relationship between dew point temperature, SO₃ content, and water content.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto border-t pt-4">
+                            <h3 class="text-lg font-semibold mb-3 text-gray-700">
+                                <span class="lang-ru">Табличные данные</span>
+                                <span class="lang-en">Tabular Data</span>
+                            </h3>
                             <table class="table-auto min-w-full border-collapse">
                                 <thead class="bg-blue-50">
                                     <tr>
@@ -868,53 +905,17 @@
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <div class="mt-6">
-                            <h3 class="text-lg font-semibold mb-3">
-                                <span class="lang-ru">Визуализация данных</span>
-                                <span class="lang-en">Data Visualization</span>
-                            </h3>
-                            <div class="bg-white border rounded-lg p-2" style="height: 400px;">
-                                <canvas id="h2so4HeatmapChart"></canvas>
-                            </div>
-                            <p class="text-sm text-gray-600 mt-2">
-                                <span class="lang-ru">Цветовая карта показывает точку росы (°C) в зависимости от содержания SO₃ и влажности H₂O.</span>
-                                <span class="lang-en">The heatmap shows dew point (°C) as a function of SO₃ content and H₂O humidity.</span>
-                            </p>
-                        </div>
                     </div>
 
                     <!-- HCl Reference Data -->
                     <div id="ref-hcl-data" class="card p-6 hidden">
                         <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
-                            <i class="fas fa-table mr-2 text-green-600"></i>
-                            <span class="lang-ru">Таблица точек росы соляной кислоты для газа типа HCl-H₂O</span>
-                            <span class="lang-en">Hydrochloric Acid Dew Point Table for HCl-H₂O Gas</span>
+                            <i class="fas fa-chart-line mr-2 text-green-600"></i>
+                            <span class="lang-ru">Точка росы соляной кислоты для газа типа HCl-H₂O</span>
+                            <span class="lang-en">Hydrochloric Acid Dew Point for HCl-H₂O Gas</span>
                         </h2>
                         
-                        <div class="overflow-x-auto">
-                            <table class="table-auto min-w-full border-collapse">
-                                <thead class="bg-green-50">
-                                    <tr>
-                                        <th class="border px-4 py-2">
-                                            <span class="lang-ru">HCl (ppm)</span>
-                                            <span class="lang-en">HCl (ppm)</span>
-                                        </th>
-                                        <th class="border px-4 py-2">5% H₂O</th>
-                                        <th class="border px-4 py-2">10% H₂O</th>
-                                        <th class="border px-4 py-2">15% H₂O</th>
-                                        <th class="border px-4 py-2">20% H₂O</th>
-                                        <th class="border px-4 py-2">25% H₂O</th>
-                                        <th class="border px-4 py-2">30% H₂O</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="hcl-table-body">
-                                    <!-- Table will be populated by JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div class="mt-6">
+                        <div class="mb-6">
                             <h3 class="text-lg font-semibold mb-3">
                                 <span class="lang-ru">Визуализация данных</span>
                                 <span class="lang-en">Data Visualization</span>
@@ -923,25 +924,72 @@
                                 <canvas id="hclHeatmapChart"></canvas>
                             </div>
                             <p class="text-sm text-gray-600 mt-2">
-                                <span class="lang-ru">Цветовая карта показывает точку росы (°C) в зависимости от содержания HCl и влажности H₂O.</span>
-                                <span class="lang-en">The heatmap shows dew point (°C) as a function of HCl content and H₂O humidity.</span>
+                                <span class="lang-ru">График показывает точку росы (°C) в зависимости от содержания HCl и влажности H₂O.</span>
+                                <span class="lang-en">The chart shows dew point (°C) as a function of HCl content and H₂O humidity.</span>
                             </p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 border-t pt-4">
+                                <i class="fas fa-table mr-2 text-green-600"></i>
+                                <span class="lang-ru">Табличные данные</span>
+                                <span class="lang-en">Table Data</span>
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="table-auto min-w-full border-collapse">
+                                    <thead class="bg-green-50">
+                                        <tr>
+                                            <th class="border px-4 py-2">
+                                                <span class="lang-ru">HCl (ppm)</span>
+                                                <span class="lang-en">HCl (ppm)</span>
+                                            </th>
+                                            <th class="border px-4 py-2">5% H₂O</th>
+                                            <th class="border px-4 py-2">10% H₂O</th>
+                                            <th class="border px-4 py-2">15% H₂O</th>
+                                            <th class="border px-4 py-2">20% H₂O</th>
+                                            <th class="border px-4 py-2">25% H₂O</th>
+                                            <th class="border px-4 py-2">30% H₂O</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hcl-table-body">
+                                        <!-- Table will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Corrosion Data -->
                     <div id="ref-corrosion-data" class="card p-6 hidden">
                         <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
-                            <i class="fas fa-table mr-2 text-red-600"></i>
-                            <span class="lang-ru">Данные скорости коррозии для разных материалов</span>
-                            <span class="lang-en">Corrosion Rate Data for Different Materials</span>
+                            <i class="fas fa-chart-line mr-2 text-red-600"></i>
+                            <span class="lang-ru">Данные по скорости коррозии</span>
+                            <span class="lang-en">Corrosion Rate Data</span>
                         </h2>
-                        
+
+                        <!-- Visualization Section -->
                         <div class="mb-6">
-                            <h3 class="text-lg font-semibold mb-3">
-                                <span class="lang-ru">Скорость коррозии (HCl)</span>
-                                <span class="lang-en">Corrosion Rate (HCl)</span>
+                            <h3 class="text-lg font-semibold mb-3 text-gray-700">
+                                <span class="lang-ru">Визуализация данных</span>
+                                <span class="lang-en">Data Visualization</span>
                             </h3>
+                            <div class="bg-red-50 p-4 rounded shadow-inner">
+                                <div class="mb-3">
+                                    <canvas id="corrosionRateChart" width="400" height="300"></canvas>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">
+                                    <span class="lang-ru">График скорости коррозии различных материалов при разных концентрациях HCl.</span>
+                                    <span class="lang-en">Chart showing corrosion rates of different materials at various HCl concentrations.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto border-t pt-4">
+                            <h3 class="text-lg font-semibold mb-3 text-gray-700">
+                                <span class="lang-ru">Табличные данные</span>
+                                <span class="lang-en">Tabular Data</span>
+                            </h3>
+                            
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <h4 class="font-medium text-gray-700 mb-2">
@@ -988,20 +1036,6 @@
                                     </table>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="mt-6">
-                            <h3 class="text-lg font-semibold mb-3">
-                                <span class="lang-ru">Визуализация данных</span>
-                                <span class="lang-en">Data Visualization</span>
-                            </h3>
-                            <div class="bg-white border rounded-lg p-2" style="height: 400px;">
-                                <canvas id="corrosionRateChart"></canvas>
-                            </div>
-                            <p class="text-sm text-gray-600 mt-2">
-                                <span class="lang-ru">График показывает скорость коррозии (мг/см²/час) для разных материалов при различных концентрациях HCl и температурах.</span>
-                                <span class="lang-en">The chart shows corrosion rate (mg/cm²/hour) for different materials at various HCl concentrations and temperatures.</span>
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -3647,6 +3681,11 @@
                     updateReferenceDataComparison(currentAcid, waterContent, acidContent, acidUnit, calculatedDewPoint);
                 });
             });
+            
+            // NEW CODE: Remove any inline style attributes from English unit spans in the corrosion rate info
+            document.querySelectorAll('#corrosion-rate-info .lang-en').forEach(el => {
+                el.removeAttribute('style');
+            });
         });
         
         // Refactored language functions
@@ -3683,6 +3722,19 @@
             const newLang = (currentLanguage === 'ru') ? 'en' : 'ru';
             setLanguage(newLang);
             console.log('Language toggled to:', newLang);
+            
+            // NEW CODE: Remove inline styles from English corrosion rate unit spans and set display based on language
+            document.querySelectorAll('#corrosion-rate-info .lang-en').forEach(el => {
+                el.removeAttribute('style');
+                if (newLang === 'en') {
+                    el.style.display = 'inline';
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+            
+            // Update corrosion rates to ensure proper unit display
+            updateCorrosionRates();
         }
         
         // Function to update labels in reference data charts
@@ -4000,8 +4052,15 @@
             
             // Recalculate to update all labels
             if (typeof performCalculations === 'function') {
-                performCalculations();
-            }
+                    performCalculations();
+                }
+
+                // Update all predicted unit elements based on current language
+                document.querySelectorAll('.predicted-unit').forEach(el => {
+                    el.textContent = el.getAttribute('data-lang-' + currentLanguage);
+                });
+            
+            // End of updateDynamicContent function code
         }
 
         // Fix the unit labels function to handle all selectors
