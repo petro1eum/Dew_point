@@ -71,7 +71,7 @@ All calculations include proper unit conversions and take into account system pr
 
 No installation required. Access the calculator directly through:
 ```
-https://raw.githack.com/EdCher/Dew_point/main/dew_calc.html
+https://raw.githack.com/petro1eum/Dew_point/main/dew_calc.html
 ```
 
 ## License
